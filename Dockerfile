@@ -17,13 +17,16 @@ RUN apt-get update && apt-get install -qyy curl git make cmake \
   && rm /opt/sbt-binary.tar.gz \
   && apt-get clean
 
+RUN git clone https://github.com/droe-nmdp/kpi /opt/kpi/repos
+
+RUN ln -s /opt/kpi/repos/src /opt/kpi/
+RUN cp /opt/kpi/repos/*.nf /opt/kpi
+RUN rsync -a /opt/kpi/repos/input /opt/kpi/
+
 # env vars
 ENV NXF_OPTS "-Xms1G -Xmx5G"
 
-# kharsh source
-ADD *.nf /opt/kpi/
-ADD input /opt/kpi/input/
-ADD src /opt/kpi/src/
+# kpi source
 ENV PATH /opt/bin:$PATH
 ENV PATH /opt/kpi:$PATH
 ENV PATH /opt/kpi/src:$PATH
