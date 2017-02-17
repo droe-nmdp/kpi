@@ -43,10 +43,9 @@ haps = '/Users/droe/src/docker/kpi/input/all_haps_v1.txt'
 fqPath = fqDir + '*.' + fqNameSuffix
 maxMem = "-Xms5g"
 // bt count (bq2bf) info
-cpuThreads = 15 
+cpuThreads = 15
 cutoff = 5
 bf_size = 800000000
-hashFile = "/opt/kpi/raw/todo.hash" // remove? per-individual?
 tabArg = "\$'\t'"
 
 fqs1 = Channel.fromPath(fqPath).ifEmpty { error "cannot find any fastq files matching ${fqPath}" }.map { path -> tuple(sample(path), path) }
@@ -54,7 +53,7 @@ fqs2 = Channel.fromPath(fqPath).ifEmpty { error "cannot find any fastq files mat
 
 /*
  * fq2Genotype
- *  
+ *
  * Make gene presence/absence calls per read and summarized.
  */
 process fq2Genotype {
@@ -72,11 +71,12 @@ process fq2Genotype {
 /*
  * Convert each sequence file to a bloom filter count file.
  * Works on an individual basis: one tree per individual.
+ */
 process fq2bf {
   input:
     set s, file(f) from fqs2
   output:
-    set o, file{"${s}.bt"}, file{"${s}.btz"} into bt
+    set file{"${s}.bt"}, file{"${s}.btz"} into bt
 
     """
     bt hashes --k 25 ${s}.hash 1
@@ -85,13 +85,13 @@ process fq2bf {
     bt build ${s}.hash listoffiles.txt ${s}.bt
     bt compress ${s}.bt ${s}.btz
     """
-    //cp ${f}.bf.bv ${resultDir}
+
 } // fq2bf
- */
+
 
 /*
  * pa2Haps
- *  
+ *
  * Fit PA genotypes to (potentially ambiguous) haplotype pairs.
  *
  */
@@ -125,7 +125,7 @@ process fq2IGenotype {
     set s, file{"${s}_igenotype.txt"}, file{"${s}_ireads.txt"} into iInterp
 
     """
-    geraghtyInterp.groovy ${gProbes} ${h} ${fqDir}/${s}${fqNameSuffix} ${s} ${s}_igenotype.txt ${s}_ireads.txt
+    geraghtyInterp.groovy ${gProbes} ${h} ${fqDir}/${s}.${fqNameSuffix} ${s} ${s}_igenotype.txt ${s}_ireads.txt
     cp -f ${s}_igenotype.txt ${s}_ireads.txt ${resultDir}
     """
 } // fq2IGenotype
@@ -153,6 +153,10 @@ process combineReadInterps {
 def sample(Path path) {
   def name = path.getFileName().toString()
   int start = Math.max(0, name.lastIndexOf('/'))
-  def ret = name.substring(start, name.indexOf(fqNameSuffix))
-  return ret
+  int end = name.indexOf(fqNameSuffix)
+  if ( end <= 0 ) {
+    throw new Exception( "Expected file " + name + " to end in '" + fqNameSuffix + "'" );
+  }
+  end = end -1 // Remove the trailing '.'
+  return name.substring(start, end)
 } // sample
