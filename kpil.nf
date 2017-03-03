@@ -76,18 +76,47 @@ process fq2bf {
   input:
     set s, file(f) from fqs2
   output:
-    set file{"${s}.bt"}, file{"${s}.btz"} into bt
+    file{"${s}.bf.bv"} into bv
 
     """
-    bt hashes --k 25 ${s}.hash 1
-    bt count --cutoff ${cutoff} --threads ${cpuThreads} ${s}.hash ${bf_size} ${f} ${s}.bf.bv
-    ls *.bf.bv > listoffiles.txt
-    bt build ${s}.hash listoffiles.txt ${s}.bt
-    bt compress ${s}.bt ${s}.btz
+    hashFile=${resultDir}/bt25.hash
+    if [ ! -f "\$hashFile" ];
+    then
+       echo "Creating hash file"
+       bt hashes --k 25 \$hashFile 1
+       echo "asd" >> /tmp/a
+    fi
+    bt count --cutoff ${cutoff} --threads ${cpuThreads} \$hashFile ${bf_size} ${f} ${s}.bf.bv
+
     """
 
 } // fq2bf
 
+/*
+ * Create the final bloomtree database.
+ */
+process btBuild {
+  input:
+    file bvList from bv.toList()
+    """
+    name=bt25
+    hashFile=${resultDir}/\$name.hash
+    if [ ! -f "\$hashFile" ];
+    then
+       echo "Hash file has not been created"
+       exit 1
+    fi
+    bvFiles=${resultDir}/bvFiles.txt
+    if [ -f \$bvFiles ]; then rm -f \$bvFiles;fi
+    for f in $bvList;do echo \$f >> \$bvFiles;done
+
+    bt build \$hashFile \$bvFiles \$name.bt
+    bt compress \$name.bt \$name.btz
+    cp \$name.bt ${resultDir}
+    cp \$name.btz ${resultDir}
+    """
+
+} // btBuild
 
 /*
  * pa2Haps
@@ -160,3 +189,11 @@ def sample(Path path) {
   end = end -1 // Remove the trailing '.'
   return name.substring(start, end)
 } // sample
+
+workflow.onComplete {
+  println "DONE: ${ workflow.success ? 'OK' : 'FAILED' }"
+}
+
+workflow.onError {
+  println "ERROR: ${workflow.errorReport.toString()}"
+}
