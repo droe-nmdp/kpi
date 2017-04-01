@@ -1,6 +1,7 @@
 FROM ubuntu:latest
 MAINTAINER Dave Roe <droe@nmdp.org>
-# todo: change the supercsv stuff
+# add(todo): https://github.com/google/guava
+# todo: remove the supercsv stuff
 
 # install stuff; mainly
 # https://github.com/medvedevgroup/bloomtree-allsome
@@ -22,8 +23,10 @@ RUN apt-get update && apt-get install -qyy curl git make vim cmake \
   && git clone https://github.com/RoaringBitmap/CRoaring.git \
   && cd CRoaring && mkdir build && cd build \
   && cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt ..  \
-  && make install && export LD_LIBRARY_PATH=$HOME/lib:\$LD_LIBRARY_PATH \
+  && make install \
   && cd /opt/bloomtree-allsome/src && make && cd ../bfcluster && make \
+  && cd /opt && wget https://sourceforge.net/projects/bbmap/files/latest/download \
+  && mv download BBMap.tar && tar -xvzf BBMap.tar && rm BBMap.tar \
   && apt-get clean
 
 # env vars
@@ -37,7 +40,9 @@ ADD src /opt/kpi/src/
 ENV PATH /opt/bin:$PATH
 ENV PATH /opt/kpi:$PATH
 ENV PATH /opt/kpi/src:$PATH
-ENV PATH bloomtree-allsome/src/bfcluster:$PATH
+ENV PATH /opt/bbmap:$PATH
+ENV PATH /opt/bloomtree-allsome/src:$PATH
+ENV PATH /opt/bloomtree-allsome/bfcluster:$PATH
 ENV CLASSPATH /opt/kpi/src/super-csv.jar:$CLASSPATH
 
 CMD ["/bin/bash"]
