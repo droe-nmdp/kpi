@@ -19,92 +19,57 @@
  *   2. reads: PA call for each read (middle 50-500 bases of each gene)
  *   3. interp: haplotype pair prediction
  *
- * @todo 
  * @author Dave Roe
  */
 
 // things that may change per run
 // here are the FASTQ files
 fqNameSuffix = 'fastq'          // extension on the file name
-fqDir = '/opt/kpi/raw/'  //todo
+fqDir = '/opt/kpi/raw/'  //todo?
 resultDir = '/opt/kpi/output'
 
 // things that probably won't change per run
 fqPath = fqDir + '*.' + fqNameSuffix
 probeFile = '/opt/kpi/input/locus-hap_probes_v1.txt'
-probeFileFasta = '/opt/kpi/input/locus-hap_probes_v1.fasta'
 haps = '/opt/kpi/input/all_haps_v2.txt'
 unmappedInd = "unmapped" // add 'unmapped' meta locus
 
 fqs1 = Channel.fromPath(fqPath).ifEmpty { error "cannot find any fastq files matching ${fqPath}" }.map { path -> tuple(sample(path), path) }
 fqs2 = Channel.fromPath(fqPath).ifEmpty { error "cannot find any fastq files matching ${fqPath}" }.map { path -> tuple(sample(path), path) }
 
-//probeChannel = Channel.create()
-probeChannel = []
-pf = file(probeFile)
-pf.readLines().each { line ->
-    (gl, probe) = line.split('\t')
-//    System.err.println "adding ${gl}" //todo
-//        probeChannel.add([gl, probe])
-//    probeChannel[gl] = probe
-//    probeChannel.add(line)
-//    str = "outm=${gl}.bin1 literal=${probe}"
-    str = gl
-    probeChannel.add(str)
-}
-probeChannel.add(unmappedInd)
-
 /*
-process fq2NoHitBin1 {
-  input:
-    set s, file(fq) from fqs1
-  output:
-    file{"${s}_unmapped.bin1"} into bin1NoHitFastq
-
-    """
-    eval "bbduk.sh in=${fq} out=${s}_unmapped.bin1 ref=${probeFileFasta} k=25 maskmiddle=f"
-
-    """
-}
-*/
-/*
- * splitFastq
+ * fq2locusBin
  *
- * Split the fastq file into one line per read. That's the 
- * way the sbt needs it to report per read.
+ * Given a FASTQ file, bin the reads into separate files based on probe markers.
  * 
  * eval "bbduk.sh in=KP420443_KP420444.bwa.read1_short.fastq outm=2DL1.bin1 literal=CTGAACCCACCAGCACAGGTCCTGG k=25 maskmiddle=f"
  * 
- * Remove the zero-length .bin1 files
- * 
- * Create the hash file here. Downstream may lead to multiple
- * processes trying to create the file.
- * @todo update documentation
+ * Output files have an extension of 'bin1'.
+ * @todo change extension to 'bin2.fastq'
+ * @todo Remove the zero-length .bin1 files?
  */
-process fq2bin1 {
+process fq2locusBin {
+  publishDir = resultDir
   input:
     set s, file(fq) from fqs1
-    each gl from probeChannel.collect()
   output:
     file{"*.bin1"} into bin1Fastqs
 
     """
-    if [ "${gl}" == "${unmappedInd}" ]; then
-        bbduk.sh in=${fq} out=${gl}.bin1 ref=${probeFileFasta} k=25 maskmiddle=f overwrite=t
-    else
-        bbduk.sh in=${fq} outm=${gl}.bin1 literal=${probe} k=25 maskmiddle=f overwrite=t
-    fi
+    probeBinFastqs.groovy -i ${fq} -p ${probeFile} -s bin1
     """
-} // fq2bin1
-
+} // fq2locusBin
 
 /*
- * bin12bin2
+ * locusBin2ExtendedLocusBin
  * 
- * Takes the probe-derived bin1 files and outputs the haplotype predictions
- * and *.bin2 files to be assembled.
+ * 1) Makes haplotype predictions from PA probes.
+ * 2) For each gene, combine its bordering intergene reads into a single bin.
+ *
+ * Output files have an extension of 'bin1'.
+ * @todo change extension to 'bin2.fastq'.
  */
-process bin12bin2 {
+process locusBin2ExtendedLocusBin {
   publishDir = resultDir
     // todo: add a set here?
   input:
@@ -136,14 +101,16 @@ process bin12bin2 {
     pa2Haps.groovy -h ${haps} -q \$fileList -o \$outFile
     binLoci.groovy -h ${haps} -q \$fileList -p \$outFile
     """
-} // bin12bin2
+} // locusBin2ExtendedLocusBin
 
 
 /* 
- * assemble bin2 files into unitig files using Canu
+ * extendedLocusBin2Unitigs
+ *
+ * Use Canu to assemble each extended locus bin into unitigs.
  * 
  */
-process bin22bin3 {
+process extendedLocusBin2Unitigs {
     publishDir resultDir, mode: 'copy', overwrite: 'true'  //testing(todo)
   input:
     file(b2List) from bin2Fastqs.collect()
@@ -158,15 +125,17 @@ process bin22bin3 {
             canu maxMemory=8 -p \$name -d \$name genomeSize=20k -pacbio-corrected \$bFile
         fi
     done
+    cp unmapped.bin2 unmapped.unitigs.fasta
     """
-} // bin22bin3
+} // extendedLocusBin2Unitigsb
 
 /* 
- * bin32bin4
+ * unitigs2Final
  *
- * Second level Canu assembly.
+ * Second, final, level Canu assembly.
+ *
  */
-process bin32bin4 {
+process unitigs2Final {
     publishDir resultDir, mode: 'copy', overwrite: 'true'  //testing(todo)
   input:
     file(b3List) from unitigFastqs.collect()
@@ -180,11 +149,12 @@ process bin32bin4 {
             cat \$bFile >> \$fname
         fi
     done
+    cat 'unmapped.unitigs.fasta' >> \$fname
     title='assembly'
     echo canu maxMemory=8 -p \$title -d \$title genomeSize=200k -pacbio-corrected \$fname
     canu maxMemory=8 -p \$title -d \$title genomeSize=200k -pacbio-corrected \$fname
     """
-} // bin32bin4
+} // unitigs2Final
 
 // get the per-sample name
 def sample(Path path) {
