@@ -1,12 +1,10 @@
 FROM ubuntu:latest
 MAINTAINER Dave Roe <droe@nmdp.org>
-# add(todo): https://github.com/google/guava
-# todo: remove the supercsv stuff
 
 # install stuff
 RUN apt-get update && apt-get install -qyy curl git make vim cmake \
      gcc g++ unzip maven subversion gzip openjdk-8-jdk groovy wget \
-     zlib1g-dev \
+     zlib1g-dev gnuplot lynx \
   && apt-get clean \
   && mkdir -p /opt/bin \
   && cd /opt/bin && curl -fsSL get.nextflow.io | /bin/bash \
@@ -14,6 +12,8 @@ RUN apt-get update && apt-get install -qyy curl git make vim cmake \
   && mv download BBMap.tar && tar -xvzf BBMap.tar && rm BBMap.tar \
   && mkdir -p /opt/jars && cd /opt/jars \
   && wget https://github.com/google/guava/releases/download/v21.0/guava-21.0.jar \
+  && cd /opt && git clone https://github.com/marbl/canu.git && cd canu/src \
+  && make -j 2 \
   && apt-get clean
 
 # env vars
@@ -29,6 +29,7 @@ ENV PATH /opt/bin:$PATH
 ENV PATH /opt/kpi:$PATH
 ENV PATH /opt/kpi/src:$PATH
 ENV PATH /opt/bbmap:$PATH
+ENV PATH /opt/canu/Linux-amd64/bin:$PATH
 ENV CLASSPATH /opt/jars/guava-21.0.jar:$CLASSPATH
 
 CMD ["/bin/bash"]
