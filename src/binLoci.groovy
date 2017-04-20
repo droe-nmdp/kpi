@@ -4,8 +4,7 @@
  * binLoci
  *
  * Given per-locus (gene and intergene) FASTQs, bin them into FASTQ files 
- * of new overlapping loci: each gene, its two inter-gene regions, and all 
- * unmapped regions.
+ * of new overlapping loci: each gene and its two inter-gene regions.
  *
  * ./binLoci.groovy -h input/all_haps_v2.txt -q 2DL3.bin1,2DL3.bin1,2DL3.bin1,2DL3-2DL5B_2DL3-2DP1.bin1,2DL3-2DP1.bin1,2DP1.bin1,2DP1.bin1,2DP1.bin1,2DP1.bin1,2DP1-2DL1_2DP1-2DS1.bin1,2DS1.bin1,2DS1.bin1,2DS1.bin1,2DS1-3DL2.bin1,3DL2.bin1,3DL2.bin1,3DL3.bin1,2DL1.bin1,3DL3-2DL3.bin1,1G.bin1,2G.bin1 -p input/predictions.txt
  * 
@@ -94,19 +93,27 @@ def void processReads(String reader, TreeSet<String> genes) {
     } // each comma-separated list of loci
 
     // append unmapped reads to *.bin2
+    cmd = ["cp", "unmapped.bin1", "unmapped.bin2"]
+    if(debugging <= 3) {
+        err.println cmd.join(' ')
+    }
+    ret = cmd.execute()
+    ret.waitFor()
+    umRetVal = ret.exitValue()
+
+/*todo: make optional?
     File src = new File("unmapped.bin1")
     err.println "droe1"//todo
     String dir = new File("").getAbsolutePath()
     err.println "dir=${dir}"//todo
     def p =  ~/.*\.bin2/
     new File(dir).eachFileMatch(p) { dest ->
-        err.println "droe2: ${dest}"//todo
         src.eachLine { line -> // append
             dest << line
             dest << newline
         }
     }
-
+*/
     if(debugging <= 1) {
         err.println "processReads: return"
     }
