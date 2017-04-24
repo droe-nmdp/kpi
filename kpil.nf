@@ -30,7 +30,7 @@ resultDir = '/opt/kpi/output'
 
 // things that probably won't change per run
 fqPath = fqDir + '*.' + fqNameSuffix
-probeFile = '/opt/kpi/input/locus-hap_probes_v1.txt'
+probeFile = '/opt/kpi/input/locus-hap_probes_v2.txt'
 haps = '/opt/kpi/input/all_haps_v2.txt'
 unmappedInd = "unmapped" // add 'unmapped' meta locus
 
@@ -42,7 +42,7 @@ fqs2 = Channel.fromPath(fqPath).ifEmpty { error "cannot find any fastq files mat
  *
  * Given a FASTQ file, bin the reads into separate files based on probe markers.
  * 
- * eval "bbduk.sh in=KP420443_KP420444.bwa.read1_short.fastq outm=2DL1.bin1 literal=CTGAACCCACCAGCACAGGTCCTGG k=25 maskmiddle=f"
+ * eval "bbduk.sh in=KP420443_KP420444.bwa.read1_short.fastq outm=2DL5.bin1 literal=TTGAACCCTCCATCACAGGTCCTGG k=25 maskmiddle=f"
  * 
  * Output files have an extension of 'bin1'.
  * @todo change extension to 'bin2.fastq'
@@ -140,19 +140,34 @@ process unitigs2Final {
   input:
     file(b3List) from unitigFastqs.collect()
   output:
-    file{"assembly/*.unitigs.fasta"} into assembly
+    file{"assembly/*.fasta"} into assembly
+//put bak(todo)    file{"assembly/*.unitigs.fasta"} into assembly
 
     """
     fname='all_bin3.fasta'
+    name_intervening='intervening.fasta'
     for bFile in $b3List; do
         if [ -s \$bFile ]; then
-            cat \$bFile >> \$fname
+            if [ "\$bFile" == *"3DP1"* ] || [ "\$bFile" == *"2DL4"* ]; then
+                cat \$bFile >> \$name_intervening
+            else
+                cat \$bFile >> \$fname
+            fi
         fi
     done
-    cat 'unmapped.unitigs.fasta' >> \$fname
+    # add unmapped reads to both bins
+#todo    cat 'unmapped.unitigs.fasta' >> \$fname
+#todo    cat 'unmapped.unitigs.fasta' >> \$name_intervening
+
+    # assemble non-intervening regions
     title='assembly'
     echo canu maxMemory=8 -p \$title -d \$title genomeSize=200k -pacbio-corrected \$fname
     canu maxMemory=8 -p \$title -d \$title genomeSize=200k -pacbio-corrected \$fname
+
+    # assemble intervening region
+    title='assembly_intervening'
+    echo canu maxMemory=8 -p \$title -d \$title genomeSize=15k -pacbio-corrected \$name_intervening
+    canu maxMemory=8 -p \$title -d \$title genomeSize=15k -pacbio-corrected \$name_intervening
     """
 } // unitigs2Final
 
