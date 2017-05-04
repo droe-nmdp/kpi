@@ -31,7 +31,7 @@ resultDir = '/opt/kpi/output'
 // things that probably won't change per run
 fqPath = fqDir + '*.' + fqNameSuffix
 probeFile = '/opt/kpi/input/locus-hap_probes_v2.txt'
-haps = '/opt/kpi/input/all_haps_v2.txt'
+haps = '/opt/kpi/input/all_haps_v3.txt'
 unmappedInd = "unmapped" // add 'unmapped' meta locus
 
 fqs1 = Channel.fromPath(fqPath).ifEmpty { error "cannot find any fastq files matching ${fqPath}" }.map { path -> tuple(sample(path), path) }
@@ -75,8 +75,7 @@ process locusBin2ExtendedLocusBin {
   input:
     file(b1List) from bin1Fastqs.collect()
   output:
-//todo(next step?)    file{"*_bin2.fastq"} into bin2Fastqs
-    file{"prediction.txt"} into prediction
+    file{"prediction.txt"} into predictionChannel
     file{"*.bin2"} into bin2Fastqs
 
     """
@@ -103,38 +102,33 @@ process locusBin2ExtendedLocusBin {
     """
 } // locusBin2ExtendedLocusBin
 
-
 /* 
- * extendedLocusBin2Unitigs
+ * mergeAndAssemble
  *
- * Use Canu to assemble each extended locus bin into unitigs.
+ * For each of the two predicted haplotypes, use Canu to assemble 
+ * each evenly-positioned locus (*.bin2) and its odd neighbors. 
+ * Repeat until entire haplotypes are assembled.
  * 
  */
-process extendedLocusBin2Unitigs {
-    publishDir resultDir, mode: 'copy', overwrite: 'true'  //testing(todo)
+process mergeAndAssemble {
+    publishDir resultDir, mode: 'copy', overwrite: 'true'
   input:
-    file(b2List) from bin2Fastqs.collect()
+    file(prediction) from predictionChannel
+    file(fqs) from bin2Fastqs
   output:
-    file{"*/*.unitigs.fasta"} into unitigFastqs
+    file{"hap[12].fasta"} into finalAssembly
 
     """
-    for bFile in $b2List; do
-        if [ -s \$bFile ]; then
-            name=\$(echo \$bFile | cut -f 1 -d '.')
-            echo canu maxMemory=8 -p \$name -d \$name genomeSize=20k -pacbio-corrected \$bFile
-            canu maxMemory=8 -p \$name -d \$name genomeSize=20k -pacbio-corrected \$bFile
-        fi
-    done
-    cp unmapped.bin2 unmapped.unitigs.fasta
+    mergeAndAssemble.groovy -p ${prediction}
     """
-} // extendedLocusBin2Unitigsb
+} // mergeAndAssembleb
 
 /* 
  * unitigs2Final
  *
  * Second, final, level Canu assembly.
  *
- */
+ *
 process unitigs2Final {
     publishDir resultDir, mode: 'copy', overwrite: 'true'  //testing(todo)
   input:
@@ -170,6 +164,7 @@ process unitigs2Final {
     canu maxMemory=8 -p \$title -d \$title genomeSize=15k -pacbio-corrected \$name_intervening
     """
 } // unitigs2Final
+*/
 
 // get the per-sample name
 def sample(Path path) {
