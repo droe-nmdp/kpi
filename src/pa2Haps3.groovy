@@ -104,8 +104,8 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
     //outWriter.println genPAMap
 	geneHitSet = genHitSet.collect{ !it.contains("-") ? it : null}.findAll()
 	intergeneHitSet = genHitSet.collect{ it.contains("-") ? it : null}.findAll()
-    outWriter.println "genes and haplotypes: " + geneHitSet.sort().join("+")
-	outWriter.println "intergenes: " + intergeneHitSet.sort().join("+")
+	//todo outWriter.println "genes and haplotypes: " + geneHitSet.sort().join("+")
+	//todo outWriter.println "intergenes: " + intergeneHitSet.sort().join("+")
 
 	// reduce the gene-only haplotype-pair ambiguity by
 	// ranking by the number of intergene hits that are found
@@ -162,7 +162,7 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
         err.println "combined: " + combinedSet.sort().join('|')
     }
     outWriter.println "gene: ${reducedPASet.join('|')}"
-    outWriter.println "haplotype: ${diploidHapSet.join('|')}"
+    //todo outWriter.println "haplotype: ${diploidHapSet.join('|')}"
     outWriter.println "combined: ${combinedSet.sort().join('|')}"
 
 	outWriter.close()
