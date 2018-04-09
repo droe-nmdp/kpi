@@ -1,0 +1,2 @@
+example1	/opt/kpi/raw/GU182339-GU182358_R1.fastq.gz
+example1	/opt/kpi/raw/GU182339-GU182358_R2.fastq.gz
