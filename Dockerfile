@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -qyy curl git make vim cmake \
      zlib1g-dev gnuplot lynx \
   && apt-get clean \
   && cd /opt && git clone https://github.com/droe-nmdp/kpi.git \
+  && mkdir -p /opt/kpi/raw \
   && mkdir -p /opt/bin \
   && cd /opt/bin && curl -fsSL get.nextflow.io | /bin/bash \
   && cd /opt/bin && wget https://github.com/refresh-bio/KMC/releases/download/v3.0.0/KMC3.linux.tar.gz \
@@ -22,7 +23,8 @@ RUN apt-get update && apt-get install -qyy curl git make vim cmake \
 #  && make -j 2 \
   && cd /opt/jars \
   && wget http://mirrors.sorengard.com/apache//commons/math/binaries/commons-math3-3.6.1-bin.tar.gz \
-  && gunzip commons-math3-3.6.1-bin.tar.gz && rm -f /opt/jars/commons-math3-3.6.1-bin.tar \
+  && gunzip commons-math3-3.6.1-bin.tar.gz && tar -xvf commons-math3-3.6.1-bin.tar \
+  && rm -f /opt/jars/commons-math3-3.6.1-bin.tar \
   && apt-get clean
 
 # env vars
