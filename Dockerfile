@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -qyy curl git make vim cmake \
      gcc g++ unzip maven subversion gzip openjdk-8-jdk groovy wget \
      zlib1g-dev gnuplot lynx \
   && apt-get clean \
+  && cd /opt && git clone https://github.com/droe-nmdp/kpi.git \
   && mkdir -p /opt/bin \
   && cd /opt/bin && curl -fsSL get.nextflow.io | /bin/bash \
   && cd /opt/bin && wget https://github.com/refresh-bio/KMC/releases/download/v3.0.0/KMC3.linux.tar.gz \
@@ -29,10 +30,10 @@ ENV NXF_OPTS "-Xms4G -Xmx20G"
 ENV LD_LIBRARY_PATH /opt/lib:$LD_LIBRARY_PATH
 
 # kpi source
-ADD *.nf /opt/kpi/
-ADD input /opt/kpi/input/
-ADD output /opt/kpi/output/
-ADD src /opt/kpi/src/
+#ADD *.nf /opt/kpi/
+#ADD input /opt/kpi/input/
+#ADD output /opt/kpi/output/
+#ADD src /opt/kpi/src/
 ENV PATH /opt/bin:$PATH
 ENV PATH /opt/bin:$PATH
 ENV PATH /opt/kpi:$PATH
