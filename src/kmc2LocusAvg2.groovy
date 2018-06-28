@@ -5,22 +5,21 @@
  *
  * Convert a kmc output file to probe hits per gene -- via average.
  *
- * This IS different from the first one in how it treats 2DL3 (now like the
- * others except debugging) and supports multiple regions per probe (via
- * '+' in the input probe map file. It also treats the reverse complement
- * handling differently.
- *
  * input: tsv of probe sequence to count
  * output: fasta file per gene containing sequences that hit (e.g. '2DL4.bin1')
  *   The loci with '/' in their names is converted to 'z'
  *     e.g., 7/24 -> 7z24 (e.g., 53a_7z24.bin1)
  *
- * e.g., kmc2LocusAvg2.groovy -j gonl-50c.txt -p /Users/droe/doc/kir/gonl/results_v1/matrix_v1/exact_matrix_v1_combinedAB-pot.txt -e bin1 -i 50c -o .
- *
- * Takes < todo seconds per individual on laptop.
+ * usage: kmc2LocusAvg2.groovy [options]
+ * Options:
+ *  -e,--extension <extension>               extension for output files
+ *  -help                                    print this message
+ *  -i,--ID <id>                             ID for the individual
+ *  -j,--kmc probe results <kmc>             input kmc counts
+ *  -o,--directory to put the output <out>   output directory
+ *  -p,--probes <probes>                     input probes
  *
  * @author Dave Roe
- * uses at least 5G memory
  *
  */
 
@@ -31,12 +30,12 @@ import groovy.util.OptionAccessor
 import org.apache.commons.math3.stat.StatUtils
 
 // things that may change per run
-debugging = 1 // TRACE=1, DEBUG=2, INFO=3
+debugging = 3 // TRACE=1, DEBUG=2, INFO=3
 // ignore kmers with a count < this (currently not using)
-minKmers = 2 //todo (coded, but commented out)
+//minKmers = 2 //todo (coded, but commented out)
 mode2DL3 = false  // if you want to analyze/debug a single gene
 kmcFasta = false   // kmc output format is fasta or text (false)
-probeFasta = true   // probe file format is fasta or text (false)
+probeFasta = true   // probe file format is fasta (true) or text (false)
 
 // things that probably won't change per run
 err = System.err
