@@ -10,11 +10,12 @@
  * Output files end with '_prediction.txt' in resultDir.
  *
  * @author Dave Roe
+ * @todo remove the '_hits.txt' files.
  */
 
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
-kmcDir = '/opt/kpi/output/'
+kmcDir = '/opt/kpi/raw/'
 bin1Suffix = 'bin1'
 resultDir = '/opt/kpi/output/'
 probeFile = '/opt/kpi/input/geneHapSigMarkers_v1.fasta'
@@ -92,7 +93,7 @@ process locusBin2ExtendedLocusBin {
             if [[ \$bFile == \$ext ]]; then
                 id=\$(basename "\$bFile")
                 # '%' Means start to remove after the next character;
-                # two means non-greedy
+				# todo: change this to kmcNameSuffix
                 id="\${id%%_*}"
                 if [ "\$id" == "" ]; then
                     id=\$(basename "\$bFile")
@@ -104,8 +105,6 @@ process locusBin2ExtendedLocusBin {
                     fileList+=","
                 fi
                 fileList+=\$bFile
-                outFile="\${id}"
-                outFile+="_prediction.txt"
             fi
         fi
     done
@@ -117,11 +116,11 @@ process locusBin2ExtendedLocusBin {
 def sample(Path path) {
   def name = path.getFileName().toString()
   int start = Math.max(0, name.lastIndexOf('/'))
-  int end = name.indexOf(kmcNameSuffix)
+  //  int end = name.indexOf(kmcNameSuffix)
   if ( end <= 0 ) {
     throw new Exception( "Expected file " + name + " to end in '" + kmcNameSuffix + "'" );
   }
-  end = end -1 // Remove the trailing '.'
+//  end = end -1 // Remove the trailing '.'
   return name.substring(start, end)
 } // sample
 
