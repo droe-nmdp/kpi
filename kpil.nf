@@ -5,6 +5,8 @@
  *
  * KIR structural interpretation for long reads. Beta version.
  *
+ * usage: docker run --rm -v <pathToFastqGz>:/opt/kpi/raw/ -v <pathToOutput>:/opt/kpi/output/ droeatnmdp/kpi /opt/kpi/kpil.nf
+ * 
  * Predict a (possibly-amiguous) pair of haplotypes given the
  * presence/absence (PA) genotype from one individual and a collection
  * of PA reference haplotypes.
@@ -20,18 +22,22 @@
  *   3. interp: haplotype pair prediction
  *
  * @author Dave Roe
+ * @todo By default, BBDuk has maskmiddle and rcomp set to true
  */
 
 // things that may change per run
 // here are the FASTQ files
-fqNameSuffix = 'fastq'          // extension on the file name
-fqDir = '/opt/kpi/raw/'  //todo?
+fqNameSuffix = 'fastq.gz'          // extension on the file name
+//fqNameSuffix = 'fasta'          // extension on the file name
+fqDir = '/opt/kpi/raw/'
 resultDir = '/opt/kpi/output'
+// input: kmc probe txt files
+kmcNameSuffix = 'fasta'          // extension on the file name
 
 // things that probably won't change per run
 fqPath = fqDir + '*.' + fqNameSuffix
-probeFile = '/opt/kpi/input/locus-hap_probes_v2.txt'
-haps = '/opt/kpi/input/all_haps_v3.txt'
+probeFile = '/opt/kpi/input/geneHapSigMarkers_v1.txt'
+haps = '/opt/kpi/tmp/input/HapSet18_v2.txt'
 unmappedInd = "unmapped" // add 'unmapped' meta locus
 
 fqs1 = Channel.fromPath(fqPath).ifEmpty { error "cannot find any fastq files matching ${fqPath}" }.map { path -> tuple(sample(path), path) }
@@ -61,13 +67,49 @@ process fq2locusBin {
 } // fq2locusBin
 
 /*
+ * kmc2locusBin
+ *
+ * Given a kmc output file, bin the hit reads into separate files based on lcus.
+ * 
+ * e.g., ./kmc2Locus.groovy -j gonl-100a.txt -p kmers.txt -e txt -o output
+ * 
+ * Input files: e.g., gonl-100a.fasta
+ * Output files have an extension of 'bin1'.
+ * @todo change extension to 'bin2.txt', etc.
+ */
+process kmc2locusBin {
+  publishDir resultDir, mode: 'copy', overwrite: true
+
+  input:
+    set s, file(kmc) from fqs1
+  output:
+    file{"${id}*.bin1"} into bin1Fastqs
+    file{"${id}*.vbin1"} into vbin1Fastqs
+    val id into idChannel
+    val vid into vidChannel
+//todo: add vilches interp output
+  maxForks 1
+
+script: 
+    // e.g., gonl-100a.fasta
+    // todo: document this
+    (dataset, id) = kmc.name.replaceFirst(kmcNameSuffix, "").replaceFirst("\\.fasta","").split('-')
+    id = id[0..-2] // remove the trailing dot
+    vid = id
+    """
+    kmc2Locus.groovy -j ${kmc} -p ${probeFile} -e ${bin1Suffix} -j ${kmcNameSuffix}  -i ${id} -v ${vilchesFileName} -o .
+    """
+} // kmc2locusBin
+
+/*
  * locusBin2ExtendedLocusBin
  * 
  * 1) Makes haplotype predictions from PA probes.
  * 2) For each gene, combine its bordering intergene reads into a single bin.
  *
- * Output files have an extension of 'bin1'.
- * @todo change extension to 'bin2.fastq'.
+ * Output files have an extension of 'bin2'.
+ *
+ * @todo old:   binLoci.groovy -h ${haps} -q \$fileList -p \$outFile
  */
 process locusBin2ExtendedLocusBin {
   publishDir = resultDir
@@ -76,7 +118,7 @@ process locusBin2ExtendedLocusBin {
     file(b1List) from bin1Fastqs.collect()
   output:
     file{"prediction.txt"} into predictionChannel
-    file{"*.bin2"} into bin2Fastqs
+    file{"*.lw.fasta"} into lwChannel
 
     """
     outFile="prediction.txt"
@@ -98,31 +140,66 @@ process locusBin2ExtendedLocusBin {
     echo \$fileList
 
     pa2Haps.groovy -h ${haps} -q \$fileList -o \$outFile
-    binLoci.groovy -h ${haps} -q \$fileList -p \$outFile
+#todo: next line (change to vprediction.txt?)
+#todo    assembleLocusWindow.groovy -p prediction.txt
     """
 } // locusBin2ExtendedLocusBin
 
-/* 
- * mergeAndAssemble
+/*
+ * kmc2locusBin
  *
- * For each of the two predicted haplotypes, use Canu to assemble 
- * each evenly-positioned locus (*.bin2) and its odd neighbors. 
- * Repeat until entire haplotypes are assembled.
+ * Given a kmc output file, bin the hit reads into separate files based on lcus.
  * 
+ * e.g., ./kmc2Locus.groovy -j gonl-100a.txt -p kmers.txt -e txt -o output
+ * 
+ * Input files: e.g., gonl-100a.fasta
+ * Output files have an extension of 'bin1'.
+ * @todo change extension to 'bin2.txt', etc.
  */
-process mergeAndAssemble {
+process kmc2locusBin {
+  publishDir resultDir, mode: 'copy', overwrite: true
+
+  input:
+    set s, file(kmc) from kmcs1
+  output:
+    file{"${id}*.bin1"} into bin1Fastqs
+    file{"${id}*.vbin1"} into vbin1Fastqs
+    val id into idChannel
+    val vid into vidChannel
+//todo: add vilches interp output
+  maxForks 1
+
+script: 
+    // e.g., gonl-100a.fasta
+    // todo: document this
+    (dataset, id) = kmc.name.replaceFirst(kmcNameSuffix, "").replaceFirst("\\.fasta","").split('-')
+    id = id[0..-2] // remove the trailing dot
+    vid = id
+    """
+    kmc2Locus.groovy -j ${kmc} -p ${probeFile} -e ${bin1Suffix} -j ${kmcNameSuffix}  -i ${id} -v ${vilchesFileName} -o .
+    """
+} // kmc2locusBin
+
+/* 
+ * assembleLocusWindow
+ *
+ * Assemble each unique combination of gene and its neighboring
+ * genes.
+ * 
+ *
+process assembleLocusWindow {
     publishDir resultDir, mode: 'copy', overwrite: 'true'
   input:
     file(prediction) from predictionChannel
-    file(fqs) from bin2Fastqs
+    file(b1f2) from bin1Fastqs2
   output:
-    file{"hap[12].fasta"} into finalAssembly
+    file{"*.lw.fasta"} into finalAssembly
 
     """
-    mergeAndAssemble.groovy -p ${prediction}
+    assembleLocusWindow.groovy -p ${prediction}
     """
-} // mergeAndAssembleb
-
+} // assembleLocusWindowb
+*/
 /* 
  * unitigs2Final
  *
