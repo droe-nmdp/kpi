@@ -54,9 +54,8 @@ if(options.m != null) {
 	fqList = loadFqMap(options.m)
 } else if(options.g != null) {
 	// todo
-	fqList = loadFqMap(options.m)
+	//fqList = loadFqMap(options.g)
 }
-HashMap<String,ArrayList<String>> fqList = loadFqMap(options.m)
 if(debugging <= 2) {
     err.println "${fqList.keySet().size()} IDs in the fastq map"
     firstKey = fqList.keySet()[0]
