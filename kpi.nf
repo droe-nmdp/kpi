@@ -118,7 +118,7 @@ process locusBin2ExtendedLocusBin {
 def sample(Path path) {
   def name = path.getFileName().toString()
   int start = Math.max(0, name.lastIndexOf('/'))
-  //  int end = name.indexOf(kmcNameSuffix)
+  int end = name.indexOf(kmcNameSuffix)
   if ( end <= 0 ) {
     throw new Exception( "Expected file " + name + " to end in '" + kmcNameSuffix + "'" );
   }
