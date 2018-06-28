@@ -104,8 +104,8 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
     //outWriter.println genPAMap
 	geneHitSet = genHitSet.collect{ !it.contains("-") ? it : null}.findAll()
 	intergeneHitSet = genHitSet.collect{ it.contains("-") ? it : null}.findAll()
-	//todo outWriter.println "genes and haplotypes: " + geneHitSet.sort().join("+")
-	//todo outWriter.println "intergenes: " + intergeneHitSet.sort().join("+")
+    outWriter.println "genes and haplotypes: " + geneHitSet.sort().join("+")
+	outWriter.println "intergenes: " + intergeneHitSet.sort().join("+")
 
 	// reduce the gene-only haplotype-pair ambiguity by
 	// ranking by the number of intergene hits that are found
@@ -162,7 +162,7 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
         err.println "combined: " + combinedSet.sort().join('|')
     }
     outWriter.println "gene: ${reducedPASet.join('|')}"
-    //todo outWriter.println "haplotype: ${diploidHapSet.join('|')}"
+    outWriter.println "haplotype: ${diploidHapSet.join('|')}"
     outWriter.println "combined: ${combinedSet.sort().join('|')}"
 
 	outWriter.close()
@@ -627,7 +627,7 @@ HashMap<String, HashMap<String,Boolean>>
  * @param g HashSet of all markers _that hit_
  * @return Set of haplotype pair predictions (e.g., cA01~tA01+cB01~tA01, ...)
  */
-HashSet<String> interpretHapMarkers(HashSet<String> g,
+HashSet<String> interpretHapMarkers<(HashSet<String> g,
 									Set<String> refHaps) {
     if(debugging <= 1) {
         err.println "interpretHapMarkers(g=${g.join(",")})"
@@ -642,7 +642,7 @@ HashSet<String> interpretHapMarkers(HashSet<String> g,
 
     HashSet<String> retSetPairs = new HashSet()
 	if(retSet.size() == 1) {
-		hap = retSet[0]
+		hap = retSet.toList()[0]
 		// don't homozygousify (for now)
         //retSetPairs.add([hap, hap].join('+'))
 		retSetPairs.add(hap)
