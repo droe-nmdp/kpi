@@ -1,2 +1,2 @@
-example1	/opt/kpi/input/GU182339-GU182358_R1.fastq.gz
-example1	/opt/kpi/input/GU182339-GU182358_R2.fastq.gz
+example1	/opt/kpi/input/example/GU182339-GU182358_R1.fastq.gz
+example1	/opt/kpi/input/example/GU182339-GU182358_R2.fastq.gz
