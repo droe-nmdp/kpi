@@ -54,7 +54,7 @@ if(options.m != null) {
 	fqList = loadFqMap(options.m)
 } else if(options.g != null) {
 	// todo
-	fqList = loadFqMap(options.m))
+	fqList = loadFqMap(options.m)
 }
 HashMap<String,ArrayList<String>> fqList = loadFqMap(options.m)
 if(debugging <= 2) {
