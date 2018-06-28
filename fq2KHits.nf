@@ -28,16 +28,17 @@ mapDir = '/opt/kpi/raw/'
 resultDir = '/opt/kpi/output'
 geneProbes  = '/opt/kpi/input/geneHapSigMarkers_v1-wRc'
 mapPath = mapDir + '*' + mapSuffix
+forks = 1 // run this many input text files in parallel
 
 fqsIn = Channel.fromPath(mapPath).ifEmpty { error "cannot find any ${mapSuffix} files in ${mapDir}" }.map { path -> tuple(sample(path), path) }
 
 process probeFastqs {
 	//publishDir resultDir, mode: 'copy', overwrite: true
+    maxForks forks
 
 	input: set s, file(f) from fqsIn
 	output:
 		set s, file('*.kmc_*') into kmcdb
-	
 	script:
 		"""
         probeFastqsKMC.groovy -m ${f} -o . -w .
