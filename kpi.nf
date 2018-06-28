@@ -13,6 +13,7 @@
  * @todo remove the '_hits.txt' files.
  */
 
+nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
 kmcDir = '/opt/kpi/output/'
@@ -39,6 +40,7 @@ kmcs2 = Channel.fromPath(kmcPath).ifEmpty { error "cannot find any ${kmcNameSuff
  */
 process kmc2locusBin {
   //publishDir resultDir, mode: 'copy', overwrite: true
+  maxForks nfForks
 
   input:
     set s, file(kmc) from kmcs1
@@ -120,7 +122,7 @@ def sample(Path path) {
   if ( end <= 0 ) {
     throw new Exception( "Expected file " + name + " to end in '" + kmcNameSuffix + "'" );
   }
-//  end = end -1 // Remove the trailing '.'
+  end = end -1 // Remove the trailing '.'
   return name.substring(start, end)
 } // sample
 
