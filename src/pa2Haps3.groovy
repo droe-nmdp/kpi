@@ -627,7 +627,7 @@ HashMap<String, HashMap<String,Boolean>>
  * @param g HashSet of all markers _that hit_
  * @return Set of haplotype pair predictions (e.g., cA01~tA01+cB01~tA01, ...)
  */
-HashSet<String> interpretHapMarkers<(HashSet<String> g,
+HashSet<String> interpretHapMarkers(HashSet<String> g,
 									Set<String> refHaps) {
     if(debugging <= 1) {
         err.println "interpretHapMarkers(g=${g.join(",")})"
