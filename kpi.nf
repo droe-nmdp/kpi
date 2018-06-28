@@ -15,7 +15,7 @@
 
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
-kmcDir = '/opt/kpi/raw/'
+kmcDir = '/opt/kpi/output/'
 bin1Suffix = 'bin1'
 resultDir = '/opt/kpi/output/'
 probeFile = '/opt/kpi/input/geneHapSigMarkers_v1.fasta'
