@@ -104,8 +104,9 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
     //outWriter.println genPAMap
 	geneHitSet = genHitSet.collect{ !it.contains("-") ? it : null}.findAll()
 	intergeneHitSet = genHitSet.collect{ it.contains("-") ? it : null}.findAll()
-    outWriter.println "genes and haplotypes: " + geneHitSet.sort().join("+")
+/*    outWriter.println "genes and haplotypes: " + geneHitSet.sort().join("+")
 	outWriter.println "intergenes: " + intergeneHitSet.sort().join("+")
+*/
 
 	// reduce the gene-only haplotype-pair ambiguity by
 	// ranking by the number of intergene hits that are found
@@ -116,9 +117,9 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
 	if(debugging <= 3) { 
 		err.println "inter-gene reduced gene interp from ${interpPASet.size()} to ${reducedPASet.size()}"
 	}
-	outWriter.println "gene-only: ${interpPASet.size()}"
+/*	outWriter.println "gene-only: ${interpPASet.size()}"
 	outWriter.println "inter-gene reduced: ${reducedPASet.size()}"
-	
+*/
 	// reduce the gene-only haplotype-pair ambiguity by
 	// ranking by the number of haplotype hits that are found
 	// in the haplotype-pair and keeping the best
@@ -128,7 +129,7 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
 	if(debugging <= 3) { 
 		err.println "haplotype-reduced gene interp from ${reducedPASet.size()} to ${combinedSet.size()}"
 	}
-	outWriter.println "haplotype reduced: ${combinedSet.size()}"
+//	outWriter.println "haplotype reduced: ${combinedSet.size()}"
 	
     diploidHapSet = interpHapSet
     // assume cA01~tA01 is homozygous
@@ -161,8 +162,9 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
         err.println "haplotype: " + diploidHapSet.join('|')
         err.println "combined: " + combinedSet.sort().join('|')
     }
-    outWriter.println "gene: ${reducedPASet.join('|')}"
+/*    outWriter.println "gene: ${reducedPASet.join('|')}"
     outWriter.println "haplotype: ${diploidHapSet.join('|')}"
+*/
     outWriter.println "combined: ${combinedSet.sort().join('|')}"
 
 	outWriter.close()
