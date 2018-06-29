@@ -49,7 +49,7 @@ process probeFastqs {
 process probeDB {
 	publishDir resultDir, mode: 'copy', overwrite: true
 
-	input: set s, file(fList) from kmcdb.collect()
+	input: set s, file(fList) from kmcdb
 	output:
 		set s, file{ "*_hits.txt"} into filterdb
 	
