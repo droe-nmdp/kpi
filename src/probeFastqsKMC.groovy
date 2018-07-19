@@ -3,8 +3,7 @@
 /*
  * probeFastqsKMC
  *
- * Given a file for a single individual, which points to a set of FASTQ files,
- * create a KMC 3 database for that ID.
+ * Given a set of FASTQ files, create a KMC 3 database for each ID.
  *
  * e.g., probeFastqsKMC.groovy -m samples_map.txt -p 25mers.fasta -o . -w work
  *
@@ -13,20 +12,9 @@
  * Requires KMC 3.
  *   http://sun.aei.polsl.pl/REFRESH/index.php?page=projects&project=kmc
  *   'kmc' to build database
- * Options:
- *  -help                                                       print this
- *                                                              message
- *  -m,--fastq name map or directory name (one ID only) <map>   fastq map
- *  -o,--directory to put the output <out>                      output
- *                                                              directory
- *  -w,--work directory <work>                                  work
- *                                                              directory
- * kmerSize=25 minKmers=3
- *
- *    e.g., kmc -k25 -ci2 -fq @./gonl-52b-cmd.txt ./gonl-52b work3
+ *   e.g., kmc -k25 -ci2 -fq @./gonl-52b-cmd.txt ./gonl-52b work3
  *
  * @author Dave Roe
- * @todo add g option for multiple IDs per file or folder
  */
 
 import groovy.io.*
@@ -37,7 +25,7 @@ import groovy.util.OptionAccessor
 // things that may change per run
 debugging = 3 // TRACE=1, DEBUG=2, INFO=3
 kmerSize = "25"
-minKmers = "3" // < this will be ignored
+minKmers = "3" // reads hit less than this will be ignored
 
 // things that probably won't change per run
 err = System.err
@@ -49,13 +37,7 @@ if(debugging <= 4) {
 }    
 
 // make list of fastq files for every individual
-HashMap<String,ArrayList<String>> fqList
-if(options.m != null) { 
-	fqList = loadFqMap(options.m)
-} else if(options.g != null) {
-	// todo
-	//fqList = loadFqMap(options.g)
-}
+HashMap<String,ArrayList<String>> fqList = loadFqMap(options.m)
 if(debugging <= 2) {
     err.println "${fqList.keySet().size()} IDs in the fastq map"
     firstKey = fqList.keySet()[0]
@@ -182,9 +164,7 @@ OptionAccessor handleArgs(String[] args) {
     cli.help('print this message')
 
     cli.m(longOpt:'fastq name map or directory name (one ID only)', args:1,
-		  argName:'map', 'fastq map', required: false)
-//    cli.g(longOpt:'fastq(.gz) name (assumes one file per id)', args:1,
-//		  argName:'map', 'fastq map', required: false)
+		  argName:'map', 'fastq map', required: true)
     cli.o(longOpt:'directory to put the output', args:1, argName:'out', 
 		  'output directory', required: true)
     cli.w(longOpt:'work directory', args:1, argName:'work', 
