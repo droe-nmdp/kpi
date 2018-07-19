@@ -5,6 +5,7 @@
  *
  * Fit PA genotypes to (potentially ambiguous) haplotype pairs.
  * Explicitly doubles cA01~tA01 (1).
+ * Uses the genotypes plus the intergene genotypes for the framework gene calls.
  * 
  * e.g., ./pa2Haps3.groovy -h $HOME/doc/kir/snp/all_haps_v4.txt -q 2DS2.bin1,2DL2.bin1,2DL3.bin1,2DL3-2DL5B_2DL3-2DP1.bin1,2DL3-2DP1.bin1,2DP1.bin1,3DP1.bin1,2DP1-2DL1_2DP1-2DS1.bin1,2DS1.bin1,2DS1-3DL2.bin1,2DL4.bin1,3DL2.bin1,3DL3.bin1,2DL1.bin1,3DL1.bin1,2DS4.bin1,3DL3-2DL3.bin1,1.bin1,4.bin1,cA01,tA01 -o prediction.txt
  * 
@@ -158,15 +159,14 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
 	if(debugging <= 3) {
         err.println "${combinedSet.size()} combined predictions"
 		err.println "genotype: " + genHitSet.sort().join("+")
-        err.println "gene: " + reducedPASet.join('|')
-        err.println "haplotype: " + diploidHapSet.join('|')
+        err.println "gene: " + reducedPASet.sort().join('|')
+        err.println "haplotype: " + diploidHapSet.sort().join('|')
         err.println "combined: " + combinedSet.sort().join('|')
     }
-/*    outWriter.println "gene: ${reducedPASet.join('|')}"
-    outWriter.println "haplotype: ${diploidHapSet.join('|')}"
+    outWriter.println "gene: ${reducedPASet.sort().join('|')}"
+/*    outWriter.println "haplotype: ${diploidHapSet.sort().join('|')}"
+    outWriter.println "combined: ${combinedSet.sort().sort().join('|')}"
 */
-    outWriter.println "combined: ${combinedSet.sort().join('|')}"
-
 	outWriter.close()
 } // writeOutput
 
