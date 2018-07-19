@@ -16,15 +16,24 @@
 nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
-kmcDir = '/opt/kpi/output/'
+params.input = '/opt/kpi/output/'
 bin1Suffix = 'bin1'
-resultDir = '/opt/kpi/output/'
-probeFile = '/opt/kpi/input/geneHapSigMarkers_v1.fasta'
-haps = '/opt/kpi/input/HapSet18_v2.txt'
+params.output = '/opt/kpi/output/'
+//probeFile = '/opt/kpi/input/geneHapSigMarkers_v1.fasta'
+probeFile = '$HOME/git/kpi/input/geneHapSigMarkers_v1.fasta'
+//haps = '/opt/kpi/input/HapSet18_v2.txt'
+haps = '$HOME/git/kpi/input/HapSet18_v2.txt'
 
 // things that probably won't change per run
+kmcDir = params.input
+resultDir = params.output
+if(!kmcDir.trim().endsWith("/")) {
+	kmcDir += "/"
+}
+if(!resultDir.trim().endsWith("/")) {
+	resultDir += "/"
+}
 kmcPath = kmcDir + '*' + kmcNameSuffix
-
 kmcs1 = Channel.fromPath(kmcPath).ifEmpty { error "cannot find any ${kmcNameSuffix} files in ${kmcPath}" }.map { path -> tuple(sample(path), path) }
 kmcs2 = Channel.fromPath(kmcPath).ifEmpty { error "cannot find any ${kmcNameSuffix} files in ${kmcPath}" }.map { path -> tuple(sample(path), path) }
 
@@ -39,7 +48,7 @@ kmcs2 = Channel.fromPath(kmcPath).ifEmpty { error "cannot find any ${kmcNameSuff
  * Output files have an extension of 'bin1'.
  */
 process kmc2locusBin {
-  //publishDir resultDir, mode: 'copy', overwrite: true
+  publishDir resultDir, mode: 'copy', overwrite: true
   maxForks nfForks
 
   input:
@@ -53,7 +62,6 @@ script:
 	String dataset
 	String id
 	id = kmc.name.replaceFirst(kmcNameSuffix, "")
-	String retId = id
     """
     kmc2LocusAvg2.groovy -j ${kmc} -p ${probeFile} -e ${bin1Suffix} -i ${id} -o .
 
@@ -122,7 +130,6 @@ def sample(Path path) {
   if ( end <= 0 ) {
     throw new Exception( "Expected file " + name + " to end in '" + kmcNameSuffix + "'" );
   }
-  end = end -1 // Remove the trailing '.'
   return name.substring(start, end)
 } // sample
 
