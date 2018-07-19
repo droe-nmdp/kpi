@@ -25,11 +25,13 @@
 
 nfForks = 1 // run this many input text files in parallel
 mapSuffix = "txt"
-mapDir = '/opt/kpi/raw/'
-resultDir = '/opt/kpi/output'
+params.input = '/opt/kpi/raw/'
+params.output = '/opt/kpi/output'
 geneProbes  = '/opt/kpi/input/geneHapSigMarkers_v1-wRc'
-mapPath = mapDir + '*' + mapSuffix
 
+mapDir = params.input
+resultDir = params.output
+mapPath = mapDir + '*' + mapSuffix
 fqsIn = Channel.fromPath(mapPath).ifEmpty { error "cannot find any ${mapSuffix} files in ${mapDir}" }.map { path -> tuple(sample(path), path) }
 
 process probeFastqs {
