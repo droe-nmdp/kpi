@@ -294,11 +294,12 @@ def kmc2FastaLine(FileReader kmcReader, HashMap<String, TreeSet<String>> locusPr
 			// list of probes and their hits per locus
 			ArrayList hitList = locusHitListMap[locus]
 			Map probeHitMap = locusProbeHitMap[locus]
+			/* this can get huge
 			if(debugging <= 2) {
 				err.println "hitList=$hitList"
-				err.println "probeHitMap=" + probeHitMap
+				(huge) err.println "probeHitMap=" + probeHitMap
 			}
-
+  		    */
 			if(probeHitMap == null) { 
 				probeHitMap = new HashMap()
 				hitList = new ArrayList()
