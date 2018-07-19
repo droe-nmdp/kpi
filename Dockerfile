@@ -50,5 +50,5 @@ ENV PATH /opt/bbmap:$PATH
 ENV PATH /opt/canu/Linux-amd64/bin:$PATH
 ENV CLASSPATH /opt/guava/guava/target/guava-HEAD-jre-SNAPSHOT.jar:/opt/jars/commons-math3-3.6.1/commons-math3-3.6.1.jar:$CLASSPATH
 
-CMD ["/bin/bash"]
-#CMD ["/opt/kpi/kpil.nf"]
+#CMD ["/bin/bash"]
+CMD ["/opt/kpi/main.nf"]
