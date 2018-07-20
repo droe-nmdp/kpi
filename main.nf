@@ -52,7 +52,7 @@ mapPath = mapDir + '*' + inputSuffix
 fqsIn = Channel.fromPath(mapPath).ifEmpty { error "cannot find any ${inputSuffix} files in ${mapDir}" }.map { path -> tuple(sample(path), path) }
 
 process probeFastqs {
-	container = "droeatnmdp/kpi:latest"
+	//container = "droeatnmdp/kpi:latest"
 	//publishDir resultDir, mode: 'copy', overwrite: true
     maxForks nfKMCForks
 
@@ -67,7 +67,7 @@ process probeFastqs {
 } // probeFastqs
 
 process probeDB {
-	publishDir resultDir, mode: 'copy', overwrite: true
+	//publishDir resultDir, mode: 'copy', overwrite: true
 
 	input: set s, file(fList) from kmcdb
 	output:
@@ -82,7 +82,7 @@ process probeDB {
 } // probeFastqs
 
 /*
- * kmc2locusBin
+ * db2Locus
  *
  * Given a kmc output file, bin the hit reads into separate files based on locus.
  * 
@@ -92,8 +92,8 @@ process probeDB {
  * Output files have an extension of 'bin1'.
  * @todo improve the memory usage here
  */
-process kmc2locusBin {
-  publishDir resultDir, mode: 'copy', overwrite: true
+process db2Locus {
+  //publishDir resultDir, mode: 'copy', overwrite: true
   maxForks nfForks
 
   input:
@@ -118,20 +118,20 @@ else
     touch "${id}_uninterpretable.bin1"
 fi
     """
-} // kmc2locusBin
+} // db2Locus
 
 /*
- * locusBin2ExtendedLocusBin
+ * hapInterp
  * 
  * 1) Makes haplotype predictions from PA probes.
  *
  *
  * @todo document
  */
-process locusBin2ExtendedLocusBin {
+process hapInterp {
   publishDir resultDir, mode: 'copy', overwrite: true
   input:
-		set s, file(b1List) from bin1Fastqs
+	set s, file(b1List) from bin1Fastqs
   output:
 	set s, file{"*_prediction.txt"} into predictionChannel
 
@@ -165,7 +165,7 @@ process locusBin2ExtendedLocusBin {
     done
     pa2Haps3.groovy -h ${haps} -q "\$fileList" -o "\$outFile"
     """
-} // locusBin2ExtendedLocusBin
+} // hapInterp
 
 // get the per-sample name
 def sample(Path path) {
