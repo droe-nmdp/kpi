@@ -23,8 +23,8 @@
  * @author Dave Roe
  */
 
+inputSuffix = "txt"
 nfKMCForks = 1 // run this many input text files in parallel
-mapSuffix = "txt"
 params.input = '/opt/kpi/raw/'
 params.output = '/opt/kpi/output'
 geneProbes  = '/opt/kpi/input/geneHapSigMarkers_v1-wRc'
@@ -33,10 +33,11 @@ nfForks = 4 // run this many input text files in parallel
 kmcNameSuffix = '_hits.txt'          // extension on the file name
 bin1Suffix = 'bin1'
 probeFile = '/opt/kpi/input/geneHapSigMarkers_v1.fasta'
-haps = '/opt/kpi/input/HapSet18_v2.txt'
+params.haps = '/opt/kpi/input/HapSet18_v2.txt'
 
 mapDir = params.input
 resultDir = params.output
+haps = params.haps
 // things that probably won't change per run
 mapDir = params.input
 resultDir = params.output
@@ -46,9 +47,9 @@ if(!mapDir.trim().endsWith("/")) {
 if(!resultDir.trim().endsWith("/")) {
 	resultDir += "/"
 }
-mapPath = mapDir + '*' + mapSuffix
+mapPath = mapDir + '*' + inputSuffix
 
-fqsIn = Channel.fromPath(mapPath).ifEmpty { error "cannot find any ${mapSuffix} files in ${mapDir}" }.map { path -> tuple(sample(path), path) }
+fqsIn = Channel.fromPath(mapPath).ifEmpty { error "cannot find any ${inputSuffix} files in ${mapDir}" }.map { path -> tuple(sample(path), path) }
 
 process probeFastqs {
 	container = "droeatnmdp/kpi:latest"
@@ -170,9 +171,9 @@ process locusBin2ExtendedLocusBin {
 def sample(Path path) {
   def name = path.getFileName().toString()
   int start = Math.max(0, name.lastIndexOf('/'))
-  int end = name.indexOf(mapSuffix)
+  int end = name.indexOf(inputSuffix)
   if ( end <= 0 ) {
-    throw new Exception( "Expected file " + name + " to end in '" + mapSuffix + "'" );
+    throw new Exception( "Expected file " + name + " to end in '" + inputSuffix + "'" );
   }
   end = end -1 // Remove the trailing '.'
   return name.substring(start, end)
