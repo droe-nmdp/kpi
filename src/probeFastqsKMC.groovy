@@ -37,31 +37,31 @@ if(debugging <= 4) {
 }    
 
 // make list of fastq files for every individual
-HashMap<String,ArrayList<String>> fqList = loadFqMap(options.m)
+HashMap<String,ArrayList<String>> fqMap = loadFqMap(options.m)
 if(debugging <= 2) {
-    err.println "${fqList.keySet().size()} IDs in the fastq map"
-    firstKey = fqList.keySet()[0]
-    err.println "${fqList[firstKey].size()} fastq files for ${firstKey}"
+    err.println "${fqMap.keySet().size()} IDs in the fastq map"
+    firstKey = fqMap.keySet().iterator().next()
+    err.println "${fqMap[firstKey].size()} fastq files for ${firstKey}"
 }
 
-probeHits = probeReads(options.o, options.w, fqList, kmerSize, minKmers)
+probeHits = probeReads(options.o, options.w, fqMap, kmerSize, minKmers)
 err.println "done"
 // end main
 
 /*
  * loadFqMap
  *
- * @param fqListFileName file containing a tab-delimited mapping between ids and fastq files
+ * @param fqMapFileName file containing a tab-delimited mapping between ids and fastq files
  *
  * if input is dir, process every file as a single id; take id
  * from first file name up to the first '_' or '.' if no underscore
  */
-HashMap<String,ArrayList<String>> loadFqMap(String fqListFileName) { 
+HashMap<String,ArrayList<String>> loadFqMap(String fqMapFileName) { 
 	// return value
     HashMap<String,ArrayList<String>> fqMap = new HashMap()
 
     // open file with probes
-	f = new File(fqListFileName)
+	f = new File(fqMapFileName)
 	fpath = f.getCanonicalPath()
 
 	String id = null
@@ -111,19 +111,19 @@ HashMap<String,ArrayList<String>> loadFqMap(String fqListFileName) {
  * 
  */
 def void probeReads(String outputDir, String workDir, 
-                    HashMap<String,ArrayList<String>> fqList,
+                    HashMap<String,ArrayList<String>> fqMap,
                     String kmerSize, String minKmers) {
     if(debugging <= 1) {
         err.println "probeReads(workDir=${workDir}, outputDir=${outputDir})"
     }
 
-    fqList.keySet().sort().each { id ->
+    fqMap.keySet().sort().each { id ->
         outFile = outputDir + fileSeparator + id
         // make the command file
         defFileName = outputDir + fileSeparator + id + "-cmd.txt"
         outWriter = new PrintWriter(new File(defFileName).newOutputStream(),
                                     true)
-        fqList[id].each { fq ->
+        fqMap[id].each { fq ->
             outWriter.println fq
         }
         outWriter.close()
