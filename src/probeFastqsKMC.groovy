@@ -62,6 +62,7 @@ HashMap<String,ArrayList<String>> loadFqMap(String fqListFileName) {
 
     // open file with probes
 	f = new File(fqListFileName)
+	fpath = f.getCanonicalPath()
 
 	String id = null
 	if(f.isDirectory()) {
@@ -84,7 +85,8 @@ HashMap<String,ArrayList<String>> loadFqMap(String fqListFileName) {
 			if(debugging <= 1) {
 				err.println line
 			}
-			(id, fileName) = line.split('\t')
+			(id, shortFileName) = line.split('\t')
+			fileName = path + fileSeparator + shortFileName
 			idList = fqMap[id]
 			if(idList != null) { 
 				idList.add(fileName)
