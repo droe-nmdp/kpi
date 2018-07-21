@@ -86,7 +86,7 @@ HashMap<String,ArrayList<String>> loadFqMap(String fqMapFileName) {
 				err.println line
 			}
 			(id, shortFileName) = line.split('\t')
-			fileName = path + fileSeparator + shortFileName
+			fileName = fpath + fileSeparator + shortFileName
 			idList = fqMap[id]
 			if(idList != null) { 
 				idList.add(fileName)
