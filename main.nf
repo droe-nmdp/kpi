@@ -61,7 +61,7 @@ process probeFastqs {
 		set s, file('*.kmc_*') into kmcdb
 	script:
 		"""
-        probeFastqsKMC.groovy -m ${f} -o . -w .
+        probeFastqsKMC.groovy -m ${f} -p ${params.input} -o . -w .
 		"""
 		
 } // probeFastqs
