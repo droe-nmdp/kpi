@@ -37,7 +37,8 @@ if(debugging <= 4) {
 }    
 
 // make list of fastq files for every individual
-HashMap<String,ArrayList<String>> fqMap = loadFqMap(options.m)
+HashMap<String,ArrayList<String>> fqMap = loadFqMap(options.m,
+													options.p)
 if(debugging <= 2) {
     err.println "${fqMap.keySet().size()} IDs in the fastq map"
     firstKey = fqMap.keySet().iterator().next()
@@ -56,13 +57,13 @@ err.println "done"
  * if input is dir, process every file as a single id; take id
  * from first file name up to the first '_' or '.' if no underscore
  */
-HashMap<String,ArrayList<String>> loadFqMap(String fqMapFileName) { 
+HashMap<String,ArrayList<String>> loadFqMap(String fqMapFileName,
+											String fpath) { 
 	// return value
     HashMap<String,ArrayList<String>> fqMap = new HashMap()
 
     // open file with probes
 	f = new File(fqMapFileName)
-	fpath = f.getCanonicalPath()
 
 	String id = null
 	if(f.isDirectory()) {
@@ -167,6 +168,8 @@ OptionAccessor handleArgs(String[] args) {
 
     cli.m(longOpt:'fastq name map or directory name (one ID only)', args:1,
 		  argName:'map', 'fastq map', required: true)
+    cli.p(longOpt:'path to the sequences files', args:1,
+		  argName:'path', 'fastq path', required: true)
     cli.o(longOpt:'directory to put the output', args:1, argName:'out', 
 		  'output directory', required: true)
     cli.w(longOpt:'work directory', args:1, argName:'work', 
