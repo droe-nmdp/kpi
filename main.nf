@@ -56,7 +56,7 @@ process probeFastqs {
 	//publishDir resultDir, mode: 'copy', overwrite: true
     maxForks nfKMCForks
 
-	input: val(f) from fqsIn
+	input: file(f) from fqsIn
 	output:
 		file('*.kmc_*') into kmcdb
 	script:
