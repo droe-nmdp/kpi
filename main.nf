@@ -27,6 +27,7 @@ inputSuffix = "txt"
 nfKMCForks = 1 // run this many input text files in parallel
 params.input = '/opt/kpi/raw/'
 params.output = '/opt/kpi/output'
+params.id = 'defaultID'
 geneProbes  = '/opt/kpi/input/geneHapSigMarkers_v1-wRc'
 nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
@@ -47,21 +48,20 @@ if(!mapDir.trim().endsWith("/")) {
 if(!resultDir.trim().endsWith("/")) {
 	resultDir += "/"
 }
-mapPath = mapDir + '*' + inputSuffix
 
-fqsIn = Channel.fromPath(mapPath).ifEmpty { error "cannot find any ${inputSuffix} files in ${mapDir}" }.map { path -> tuple(sample(path), path) }
+fqsIn = Channel.fromPath(mapDir).ifEmpty { error "cannot find anything in $smapDir" }
 
 process probeFastqs {
 	//container = "droeatnmdp/kpi:latest"
 	//publishDir resultDir, mode: 'copy', overwrite: true
     maxForks nfKMCForks
 
-	input: set s, file(f) from fqsIn
+	input: val(f) from fqsIn
 	output:
-		set s, file('*.kmc_*') into kmcdb
+		file('*.kmc_*') into kmcdb
 	script:
 		"""
-        probeFastqsKMC.groovy -m ${f} -p ${params.input} -o . -w .
+        probeFastqsKMC.groovy -d ${params.id} -p ${f} -o . -w .
 		"""
 		
 } // probeFastqs
@@ -69,13 +69,13 @@ process probeFastqs {
 process probeDB {
 	//publishDir resultDir, mode: 'copy', overwrite: true
 
-	input: set s, file(fList) from kmcdb
+	input: file(kmc) from kmcdb
 	output:
-		set s, file{ "*_hits.txt"} into filterdb
+		file{ "*_hits.txt"} into filterdb
 	
 	script:
 		"""
-        echo ${fList}
+        echo ${kmc}
         filterMarkersKMC2.groovy -d . -p ${geneProbes} -o . -w .
 		"""
 		
@@ -97,15 +97,16 @@ process db2Locus {
   maxForks nfForks
 
   input:
-    set s, file(hits) from filterdb // left off
+    file(hits) from filterdb
   output:
-	set s, file{"${s}*.bin1"} into bin1Fastqs
+	file{"*.bin1"} into bin1Fastqs
+	val(id) into idc
 
 script: 
     // e.g., gonl-100a.fasta
     // todo: document this
 	String dataset
-	String id
+	String idn
 	id = hits.name.replaceFirst(kmcNameSuffix, "")
     """
     kmc2LocusAvg2.groovy -j ${hits} -p ${probeFile} -e ${bin1Suffix} -i ${id} -o .
@@ -113,7 +114,7 @@ script:
 if ls *.bin1 1> /dev/null 2>&1; then
     : # noop
 else
-    echo "snp: " > "${id}_prediction.txt"
+    echo "combined: uninterpretable" > "${id}_prediction.txt"
 
     touch "${id}_uninterpretable.bin1"
 fi
@@ -131,15 +132,14 @@ fi
 process hapInterp {
   publishDir resultDir, mode: 'copy', overwrite: true
   input:
-	set s, file(b1List) from bin1Fastqs
+	file(b1List) from bin1Fastqs
+	val(idIn) from idc
   output:
-	set s, file{"*_prediction.txt"} into predictionChannel
+	file{"*_prediction.txt"} into predictionChannel
 
   script:
     """
-    FILES="${s}*.bin1"
-    outFile="${s}"
-    outFile+="_prediction.txt"
+    FILES="*.bin1"
     fileList=""
     id=""
     ext="*bin1*"
@@ -153,7 +153,7 @@ process hapInterp {
                 if [ "\$id" == "" ]; then
                     id=\$(basename "\$bFile")
                 fi
-                # echo \$bFile
+                #echo \$bFile
                 if [ "\$fileList" == "" ]; then
                     :
                 else
@@ -163,6 +163,8 @@ process hapInterp {
             fi
         fi
     done
+    outFile=${idIn}
+    outFile+="_prediction.txt"
     pa2Haps3.groovy -h ${haps} -q "\$fileList" -o "\$outFile"
     """
 } // hapInterp
