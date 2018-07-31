@@ -7,7 +7,9 @@
  *
  * e.g., probeFastqsKMC.groovy -m samples_map.txt -p 25mers.fasta -o . -w work
  *
- * -m can be a directory with fq.gz files or file with two columns: name to file map
+ * Input either -p or -m. -p is preferred
+ *   -p path to folder with fasta and fastq files (gzipped optional)
+ *   -m map file with two columns: id and file name
  * 
  * Requires KMC 3.
  *   http://sun.aei.polsl.pl/REFRESH/index.php?page=projects&project=kmc
@@ -37,7 +39,11 @@ if(debugging <= 4) {
 }    
 
 // make list of fastq files for every individual
-HashMap<String,ArrayList<String>> fqMap = loadFqMap(options.m,
+String id = null
+if(options.d) {
+	id = options.d
+}
+HashMap<String,ArrayList<String>> fqMap = loadFqMap(id,
 													options.p)
 if(debugging <= 2) {
     err.println "${fqMap.keySet().size()} IDs in the fastq map"
@@ -54,33 +60,40 @@ err.println "done"
  *
  * @param fqMapFileName file containing a tab-delimited mapping between ids and fastq files
  *
- * if input is dir, process every file as a single id; take id
- * from first file name up to the first '_' or '.' if no underscore
+ * if fqMapFileName is not null, append the file name to the path and use it;
+ * if it is null, use all the files in the directory (fpath);
+ * the id is take from the file or the directory
  */
-HashMap<String,ArrayList<String>> loadFqMap(String fqMapFileName,
+HashMap<String,ArrayList<String>> loadFqMap(String id,
 											String fpath) { 
 	// return value
     HashMap<String,ArrayList<String>> fqMap = new HashMap()
 
-    // open file with probes
-	f = new File(fqMapFileName)
-
-	String id = null
-	if(f.isDirectory()) {
-		f.eachInFileRecurse InFileType.INFILES,  { inFile ->
+	String fqMapFileName = null
+	if(fqMapFileName == null) {
+		new File(fpath).eachFileRecurse(FileType.FILES)  { inFile ->
 			if(inFile.name.endsWith(".fq") || inFile.name.endsWith(".fq.gz") ||
 			   inFile.name.endsWith(".fastq") || inFile.name.endsWith(".fastq.gz") ||
 			   inFile.name.endsWith(".fa") || inFile.name.endsWith(".fa.gz") ||
 			   inFile.name.endsWith(".fasta") || inFile.name.endsWith(".fasta.gz")) {
 				if(id == null) {
-					id = substring(0, names.indexOf('_'))
-					if(id == null) {
-						id = substring(0, names.indexOf('.'))
-					}
+					// get the id from the directory name
+					id = fpath.split(System.getProperty('file.separator'))[-1]
 				}
-			}
+				//fileName = fpath + fileSeparator + inFile
+				fileName = inFile
+				idList = fqMap[id]
+				if(idList != null) { 
+					idList.add(fileName)
+				} else { 
+					ArrayList<String> l = new ArrayList()
+					l.add(fileName)
+					fqMap[id] = l
+				}    
+			} // if the correct file type
 		}
 	} else {
+		f = new File(fqMapFileName)
 		FileReader probeReader = new FileReader(f)
 		probeReader.eachLine { line ->
 			if(debugging <= 1) {
@@ -167,7 +180,9 @@ OptionAccessor handleArgs(String[] args) {
     cli.help('print this message')
 
     cli.m(longOpt:'fastq name map or directory name (one ID only)', args:1,
-		  argName:'map', 'fastq map', required: true)
+		  argName:'map', 'fastq map', required: false)
+    cli.d(longOpt:'ID for output', args:1,
+		  argName:'id', 'id', required: true)
     cli.p(longOpt:'path to the sequences files', args:1,
 		  argName:'path', 'fastq path', required: true)
     cli.o(longOpt:'directory to put the output', args:1, argName:'out', 
