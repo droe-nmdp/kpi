@@ -16,6 +16,7 @@ RUN cd /opt \
   && cd /opt/bin \
   && wget -qO- http://get.nextflow.io | bash \
   && chmod 755 /opt/bin/nextflow \
+  && /opt/bin/nextflow \
   && wget https://github.com/refresh-bio/KMC/releases/download/v3.0.0/KMC3.linux.tar.gz \
   && tar -zxvf KMC3.linux.tar.gz \
   && rm -f KMC3.linux.tar.gz \
