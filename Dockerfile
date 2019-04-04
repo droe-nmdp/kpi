@@ -14,7 +14,7 @@ RUN cd /opt \
   && git clone https://github.com/droe-nmdp/kpi.git \
   && mkdir -p /opt/kpi/raw /opt/bin \
   && cd /opt/bin \
-  && wget http://www.nextflow.io/releases/v19.01.0/nextflow?a=install -o /opt/bin/nextflow \
+  && wget -qO- http://get.nextflow.io | bash \
   && chmod 755 /opt/bin/nextflow \
   && wget https://github.com/refresh-bio/KMC/releases/download/v3.0.0/KMC3.linux.tar.gz \
   && tar -zxvf KMC3.linux.tar.gz \
