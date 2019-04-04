@@ -19,7 +19,7 @@ RUN cd /opt \
   && wget https://github.com/refresh-bio/KMC/releases/download/v3.0.0/KMC3.linux.tar.gz \
   && tar -zxvf KMC3.linux.tar.gz \
   && rm -f KMC3.linux.tar.gz \
-  && mkdir -p /opt/jars
+  && mkdir -p /opt/jars \
   && cd /opt/jars \
   && wget http://www.apache.org/dist/commons/math/binaries/commons-math3-3.6.1-bin.tar.gz \
   && tar -zxvf commons-math3-3.6.1-bin.tar.gz \
