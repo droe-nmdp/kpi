@@ -2,11 +2,12 @@ FROM ubuntu:latest
 MAINTAINER Dave Roe <droe@nmdp.org>
 
 # apt stuff
-RUN apt-get update && apt-get install -qyy curl git make vim cmake \
+RUN apt-get update \
+  && apt-get install -qyy curl git make vim cmake \
      gcc g++ unzip subversion gzip openjdk-8-jdk openjdk-8-doc groovy wget \
      zlib1g-dev gnuplot lynx maven \
 	 bzip2 libbz2-dev liblzma-dev libncurses5-dev libncursesw5-dev \
-  && apt-get clean \
+  && apt-get clean
 
 # install stuff
 RUN cd /opt && git clone https://github.com/droe-nmdp/kpi.git \
