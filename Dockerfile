@@ -10,11 +10,13 @@ RUN apt-get update \
   && apt-get clean
 
 # install stuff
+ENV TMPDIR /tmp
 RUN cd /opt \
   && git clone https://github.com/droe-nmdp/kpi.git \
   && mkdir -p /opt/kpi/raw /opt/bin \
   && cd /opt/bin \
   && wget -qO- http://get.nextflow.io | bash \
+  && sed -i s/"curl -fsSL"/"curl -fsSLk"/ /opt/bin/nextflow \
   && chmod 755 /opt/bin/nextflow \
   && /opt/bin/nextflow \
   && wget https://github.com/refresh-bio/KMC/releases/download/v3.0.0/KMC3.linux.tar.gz \
