@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -qyy curl git make vim cmake \
 #  && cd /opt && git clone https://github.com/marbl/canu.git && cd canu/src \
 #  && make -j 2 \
   && cd /opt/jars \
-  && https://www-us.apache.org/dist//commons/math/binaries/commons-math3-3.6.1-bin.tar.gz \
+  && wget https://www-us.apache.org/dist//commons/math/binaries/commons-math3-3.6.1-bin.tar.gz \
   && gunzip commons-math3-3.6.1-bin.tar.gz && tar -xvf commons-math3-3.6.1-bin.tar \
   && rm -f /opt/jars/commons-math3-3.6.1-bin.tar \
 #  && cd /opt/ && wget https://github.com/samtools/htslib/releases/download/1.8/htslib-1.8.tar.bz2 \
