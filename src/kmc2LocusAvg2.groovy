@@ -19,6 +19,9 @@
  *  -o,--directory to put the output <out>   output directory
  *  -p,--probes <probes>                     input probes
  *
+ * Requires
+ *   Apache Commons Math
+ *
  * @author Dave Roe
  *
  */
@@ -30,13 +33,15 @@ import groovy.util.OptionAccessor
 import org.apache.commons.math3.stat.StatUtils
 
 // things that may change per run
-debugging = 3 // TRACE=1, DEBUG=2, INFO=3
+debugging = 2 // TRACE=1, DEBUG=2, INFO=3
 // ignore kmers with a count < this (currently not using)
 //minKmers = 2 //todo (coded, but commented out)
-mode2DL3 = false  // if you want to analyze/debug a single gene
 kmcFasta = false   // kmc output format is fasta or text (false)
 probeFasta = true   // probe file format is fasta (true) or text (false)
-
+outputAll = false
+outputProbeName = true
+// kmc stops counting after this; assume off-kir hits if this or higher
+maxHitCount = 255
 // things that probably won't change per run
 err = System.err
 fileSeparator = System.getProperty('file.separator')
@@ -58,20 +63,20 @@ err.println "done"
  * Convert Kmc output to fasta format -- one file per gene containing
  * all the hit probes.
  *
- * @param probesHitsFile String containing the name of the Kmc output file: tab-separated probe DNA then count (including 0)
+ * @param probesHitsFile String containing the name of the Kmc output file(e.g., '*hits.txt'): tab-separated probe DNA then count (including 0)
  * @todo modularize
  */
 int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir, 
               String id, String extension, Boolean kmcFasta, Boolean probeFasta) { 
     if(debugging <= 1) { 
-        err.println "kmc2Fasta: probeHitsFile=${probeHitsFile}, id=${id}, outputDir=${outputDir}, extension=${extension}"
+        err.println "kmc2Fasta(probeHitsFile=${probeHitsFile}, id=${id}, outputDir=${outputDir}, extension=${extension})"
     }
 
     int retval = 0
 	// map: probe -> Set of loci
     HashMap<String, TreeSet<String>> locusProbeMap = loadProbeMap(probeFileName,
 																  probeFasta) 
-	if(debugging <= 1) {
+	if(debugging <= 3) {
 		err.println "kmc2Fasta: ${locusProbeMap.keySet().size()} locus/probes in ${probeFileName} (locusProbeMap)"
 	}
     // locus -> probe seq -> count
@@ -79,7 +84,7 @@ int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir,
    HashMap<String, HashMap<String, Integer>> locusProbeHitMap = new HashMap()
 	// locus -> list of hit counts (including zeros)
 	HashMap<String,ArrayList<Integer>> locusHitListMap = new HashMap()
-    if(debugging <= 1) { 
+    if(debugging <= 3) { 
         err.println "kmc2Fasta: probeHitsFile=${probeHitsFile}, outputDir=${outputDir}, extension=${extension}"
     }
 	
@@ -89,10 +94,11 @@ int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir,
 	kmc2FastaLine(kmcReader, locusProbeMap, locusProbeHitMap,
 				  locusHitListMap, kmcFasta)
 
-    if(debugging <= 1) { 
+    if(debugging <= 3) { 
         err.println "kmc2Fasta: ${locusProbeHitMap.size()} loci in locusProbeHitMap"
     }
-	// add the zeros back to locusHitListMap
+	// loop through all the probes and
+    // add the zeros (non-hits) back to locusHitListMap
 	locusProbeMap.keySet().each { probe ->
 		locusSet = locusProbeMap[probe] // set of loci defined for this probe
 		zeroCount = 0
@@ -104,6 +110,7 @@ int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir,
 				pcount = pMap[probe]
 				prcCount = pMap[reverseComplement(probe)]
 			}
+                
 			ArrayList plist = locusHitListMap[loc]
 			if(plist == null) {
 				plist = new ArrayList()
@@ -117,6 +124,18 @@ int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir,
 			if((pcount == 0) && (prcCount == 0)) {
 				plist.add(0)
 				zeroCount++
+            } else if((pcount >= maxHitCount) ||
+                      (prcCount >= maxHitCount)) { // off-kir
+                if(debugging <= 2) { 
+                    err.println "kmc2Fasta: off-kir for $loc probe $probe"
+                }
+                // remove from locusProbeHitMap
+                locusProbeHitMap.remove(probe)
+                // remove from locusHitListMap later
+			} else {
+				// output the lcous and sequences that count
+				//todo: add debugging or whatever
+				//err.println "$loc\t$probe"
 			}
 		} // each locus defined for this probe
 		if((zeroCount > 0) && (debugging <= 1)){ 
@@ -145,13 +164,15 @@ int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir,
 			return
 		}
 
+        plist.removeAll(maxHitCount) // remove all the off-kir hits
+
 		if(debugging <= 2) {
 			err.println "kmc2Fasta: $loc plist=" + plist
 		}
 		double[] pListD = plist.toArray()
 		double[] avgList = StatUtils.mode(pListD)
 		if(debugging <= 2) {
-			err.println "avgList=" + avgList
+			err.println "$loc avgList=" + avgList
 		}
         if((avgList == null)  || (avgList.size() == 0)){
 			return
@@ -164,34 +185,11 @@ int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir,
 		} else {
 			avg = avgList[0]
 			if(debugging <= 2) {
-				err.println "kmc2Fasta: setting to first avgList: " + avgList[0]
+				err.println "kmc2Fasta: setting to first $loc avgList: " + avgList[0]
 			}
 		}
 
-		/* this was for some initial debugging using 2DL3;
-		 * it is not needed anymore */
-		// if the mode is zero, but over 200 hits, take the mode of the hits
-		if((loc == "2DL3") && (mode2DL3)) {
-			// err.println "in 2DL3 mode"
-			// 
-			if((avg == 0) && (preZero2DL3List.size() > 200)) {
-				avgList = StatUtils.mode(preZero2DL3List)
-			}
-			if((avgList == null)  || (avgList.size() == 0)){
-				return
-			}
-			avg = 0
-			if(avgList.size() > 1) {
-				avg = StatUtils.mean(preZero2DL3List)
-				err.println "mean=${avg}"
-			} else {
-				avg = avgList[0]
-				err.println "setting to first avgList(mode): " + avgList[0]
-			}
-            //err.println "droe1 " + plist  //todo
-		}
-		
-		if(avg == 0) {
+		if((avg == 0) && (outputAll != true)){
 			return
 		}
 
@@ -199,11 +197,16 @@ int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir,
 									true)
 		// non-null plist from here down
         plist.each { hitCount ->
+			if(hitCount == 0) {
+				return
+			}
             if(debugging <= 1) { 
                 err.println "kmc2Fasta: writing ${loc} ${hitCount}"
             }
 			// this is in the file name
-            //outWriter.println ">${loc}"
+			if(outputProbeName) { 
+				outWriter.println ">${loc}"
+			}
             outWriter.println "${hitCount}"
         }
         outWriter.close()
@@ -320,60 +323,6 @@ def kmc2FastaLine(FileReader kmcReader, HashMap<String, TreeSet<String>> locusPr
 	}
 } // kmc2FastaLine
 
-/*
- * readPrimers
- *
- * Read the file containing the information on the primers.
- *
- * @param primerFileName a String containing the full path to the primer file
- * @return a Map: locus names to array of 
- *    Expandos (locus, fName, fSeq, rName, rSeq, bp)
- *      bp is the total distance between the two primers, including the primers
- * @todo remove
- */ 
-def Map readPrimers(String primerFileName) { 
-    if(debugging) { 
-        err.println "readPrimers(primerFileName=${primerFileName})\n"
-    }
-    // open primer file
-    primerReader = new BufferedReader(new FileReader(primerFileName))
-
-    locusPrimersMap = [:]
-    primersCount = 0
-
-    primerReader.eachLine { line ->
-        // skip header and blank lines
-        if((line == null) || line.contains("name") || (line.length() == 0)) {
-            return
-        }
-		//err.println line //todo
-        p = new Expando()
-        // e.g., 2DL1	Fa517	gttggtcagatgtcatgtttgaa	Rc621	cctgccaggtcttgcg	142
-        (fName, fSeq, rName, rSeq) = line.split()
-        (locus, rest) = fName.split("_")
-        p.locus = locus
-        p.fName = fName
-        p.fSeq = fSeq.toUpperCase()
-        p.rName = rName
-        p.rSeq = rSeq.toUpperCase()
-        existingArray = locusPrimersMap[locus]
-        if(!existingArray) { 
-            primersArray = [p]
-            locusPrimersMap[locus] = primersArray
-        } else { 
-            existingArray.add(p)
-        }
-        primersCount++
-    } // each line
-
-    primerReader.close()
-
-    if(debugging) { 
-        err.println "readPrimers: done; ${primersCount} pairs of primers\n"
-    }
-    return locusPrimersMap
-} // readPrimers
-
 // http://groovyconsole.appspot.com/script/29005
 def String reverseComplement(String seq) { 
     if(debugging) { 
@@ -413,9 +362,9 @@ HashMap<String,TreeSet<String>> loadProbeMap(String probeListFileName,
 				locus = line[1..-1].trim()
 			} else {
 				probe = line.trim()
-				if(debugging <= 2) { 
+				/*if(debugging <= 2) { 
 					err.println "fasta: $locus $probe"
-				}
+				}*/
 				addToProbeMap(probeMap, locus, probe)
 				locus = null
 				probe = null

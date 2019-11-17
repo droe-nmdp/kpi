@@ -28,13 +28,13 @@ nfKMCForks = 1 // run this many input text files in parallel
 params.input = '/opt/kpi/raw/'
 params.output = '/opt/kpi/output'
 params.id = 'defaultID'
-geneProbes  = '/opt/kpi/input/geneHapSigMarkers_v1-wRc'
+geneProbes  = '/opt/kpi/input/markers_v2.fasta'
 nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
 bin1Suffix = 'bin1'
-probeFile = '/opt/kpi/input/geneHapSigMarkers_v1.fasta'
-params.haps = '/opt/kpi/input/HapSet18_v2.txt'
+probeFile = '/opt/git/kpi/input/markers_v2.fasta'
+params.haps = '/opt/git/kpi/input/all_haps_v5.txt'
 
 mapDir = params.input
 resultDir = params.output
@@ -49,25 +49,32 @@ if(!resultDir.trim().endsWith("/")) {
 	resultDir += "/"
 }
 
-fqsIn = Channel.fromPath(mapDir).ifEmpty { error "cannot find anything in $smapDir" }
+fqsIn = Channel.fromPath(mapDir).ifEmpty { error "cannot find anything in $mapDir" }
 
+/* 
+ * @todo handle both input options
+ * @todo m option only publishes everything at the end
+ */ 
 process probeFastqs {
 	//container = "droeatnmdp/kpi:latest"
-	//publishDir resultDir, mode: 'copy', overwrite: true
-    maxForks nfKMCForks
-
+	publishDir resultDir, mode: 'copy', overwrite: true
+    maxForks 1
+//todo	scratch true
+	
 	input: file(f) from fqsIn
 	output:
 		file('*.kmc_*') into kmcdb
 	script:
 		"""
-        probeFastqsKMC.groovy -d ${params.id} -p ${f} -o . -w .
+        probeFastqsKMC.groovy -m ${f} -o . -w .
 		"""
+//        probeFastqsKMC.groovy -d ${params.id} -p ${f} -o . -w .
 		
 } // probeFastqs
 
 process probeDB {
-	//publishDir resultDir, mode: 'copy', overwrite: true
+	publishDir resultDir, mode: 'copy', overwrite: true
+//todo	scratch true
 
 	input: file(kmc) from kmcdb
 	output:
@@ -95,6 +102,7 @@ process probeDB {
 process db2Locus {
   //publishDir resultDir, mode: 'copy', overwrite: true
   maxForks nfForks
+//todo  scratch true
 
   input:
     file(hits) from filterdb
@@ -131,6 +139,8 @@ fi
  */
 process hapInterp {
   publishDir resultDir, mode: 'copy', overwrite: true
+//  scratch true
+
   input:
 	file(b1List) from bin1Fastqs
 	val(idIn) from idc
@@ -165,7 +175,7 @@ process hapInterp {
     done
     outFile=${idIn}
     outFile+="_prediction.txt"
-    pa2Haps3.groovy -h ${haps} -q "\$fileList" -o "\$outFile"
+    pa2Haps4.groovy -h ${haps} -q "\$fileList" -o "\$outFile"
     """
 } // hapInterp
 

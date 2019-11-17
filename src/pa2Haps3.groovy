@@ -5,9 +5,10 @@
  *
  * Fit PA genotypes to (potentially ambiguous) haplotype pairs.
  * Explicitly doubles cA01~tA01 (1).
- * Uses the genotypes plus the intergene genotypes for the framework gene calls.
  * 
- * e.g., ./pa2Haps3.groovy -h $HOME/doc/kir/snp/all_haps_v4.txt -q 2DS2.bin1,2DL2.bin1,2DL3.bin1,2DL3-2DL5B_2DL3-2DP1.bin1,2DL3-2DP1.bin1,2DP1.bin1,3DP1.bin1,2DP1-2DL1_2DP1-2DS1.bin1,2DS1.bin1,2DS1-3DL2.bin1,2DL4.bin1,3DL2.bin1,3DL3.bin1,2DL1.bin1,3DL1.bin1,2DS4.bin1,3DL3-2DL3.bin1,1.bin1,4.bin1,cA01,tA01 -o prediction.txt
+ * todo: update example
+ * e.g., pa2Haps3.groovy -h $HOME/doc/kir/snp/all_haps_v4.txt -q 2DL2.bin1,3DL2.bin1,2DL3.bin1,3DL3.bin1,2DL4.bin1,3DP1-2DL4.bin1,2DP1.bin1,3DP1.bin1,2DS2.bin1,cA01~tA01.bin1,2DS4.bin1,cB02~tA01.bin1,3DL1.bin1,cB02~tB01.bin1 -o prediction.txt
+ *
  * 
  * Requires
  *  guava.jar: https://github.com/google/guava
@@ -24,7 +25,7 @@ import com.google.common.collect.Table
 import com.google.common.collect.HashBasedTable
 
 // things that may change per run
-debugging = 3 // TRACE=1, DEBUG=2, INFO=3
+debugging = 1 // TRACE=1, DEBUG=2, INFO=3
 
 // thing that probably won't change per run
 err = System.err
@@ -45,7 +46,7 @@ String qString = new String(options.q)
 // Table<hap number, locus names, gene count>
 HashBasedTable<String, String, Boolean> hapTable
 HashMap<String, Float> freqMap // hap number -> frequency
-HashMap<String, String> nomenclatureMap // hap number -> hap name
+HashMap<String, String> nomenclatureMap // hap name -> hap number
 (hapTable, freqMap, nomenclatureMap) = readReferenceHaplotypes(hapReader)
 // Table<hap pair numbers, locus names, gene count>
 HashBasedTable<String, String, Boolean> hapPairTable =
@@ -63,7 +64,7 @@ HashMap<String,Boolean> genPAMap
 HashSet<String> genHitSet
 (genPAMap, genHitSet) = makeGenotypeMaps(lociSet,
 										 hapTable.columnKeySet(),
-                                         hapPairTable)
+                                         hapPairTable, nomenclatureMap)
 
 // haplotype pairs -> Map[locus: boolean]
 HashMap<String, HashMap<String,Boolean>> interpPAMap = null
@@ -86,7 +87,12 @@ writeOutput(options.o, genPAMap, genHitSet, paLoci, interpHapSet,
  * Make homozygous if the haplotype is cA01~tA01 (1).
  * 
  * Send the haplotype pair predictions to the output file.
- * @param hapTable Table<hap number, locus names, gene count>
+ * @param outFileName String with output file name
+ * @param genPAMap HashMap<String,Boolean> of input of _all_ loci genotype hit map
+ * @param genHitSet HashSet<String> of loci that _hit_ (present)
+ * @param interpPASet Set of Strings with haplotype predictions from gene interpretation
+ * @param interpHapSet Set of Strings with haplotype predictions from haplotype interpretation
+ * @param hapPairTable Table<hap number, locus names, gene count>
  *
  */
 def void writeOutput(String outFileName, Map genPAMap, Set genHitSet, 
@@ -163,13 +169,13 @@ def void writeOutput(String outFileName, Map genPAMap, Set genHitSet,
         err.println "haplotype: " + diploidHapSet.sort().join('|')
         err.println "combined: " + combinedSet.sort().join('|')
     }
+    outWriter.println "${combinedSet.size()} combined predictions"
+	outWriter.println "genotype: " + genHitSet.sort().join("+")
     outWriter.println "gene: ${reducedPASet.sort().join('|')}"
-/*    outWriter.println "haplotype: ${diploidHapSet.sort().join('|')}"
+    outWriter.println "haplotype: ${diploidHapSet.sort().join('|')}"
     outWriter.println "combined: ${combinedSet.sort().sort().join('|')}"
-*/
 	outWriter.close()
 } // writeOutput
-
 
 /* 
  * reduceGeneByInterGene
@@ -271,18 +277,18 @@ HashSet<String> combineInterpretations(Set genHitSet,
 			}
         }
         if(debugging <= 2) {
-            err.println "writeOutput: hitcount ${hitcount} for ${paPair}"
+            err.println "combineInterpretations: hitcount ${hitcount} for ${paPair}"
         }
         if(hitcount > highestHitcount) {
             if(debugging <= 2) {
-                err.println "writeOutput: setting highestHitcount"
+                err.println "combineInterpretations: setting highestHitcount"
             }
             outSet = new HashSet()
             outSet.add(paPair)
             highestHitcount = hitcount
         } else if(hitcount == highestHitcount) {
             if(debugging <= 2) {
-                err.println "writeOutput: adding highestHitcount"
+                err.println "combineInterpretations: adding highestHitcount"
             }
             outSet.add(paPair)
         }
@@ -475,10 +481,15 @@ def HashSet<String> readQueries(String reader) {
  * @param lociSet Set containing Strings from the '.bin1' loci list
  * @param geneSet Set containing all reference loci 
  * @param hapPair Table<hap pair names, locus names, gene count>
+ * @param nomenclatureMap Map of hap name -> hap number
  * @return List of two objects HashMap<String,Boolean> gene PA and HashSet<String> gene all
  */
 List makeGenotypeMaps(HashSet<String> lociSet, Set<String> geneSet,
-                      HashBasedTable<String, String, Boolean> hapPairTable) {
+                      HashBasedTable<String, String, Boolean> hapPairTable,
+                      HashMap<String, String> nomenclatureMap) {
+    if(debugging <= 1) {
+        err.println "makeGenotypeMaps()"
+    }
     HashMap<String,Boolean> paProbeMap = new HashMap()
     HashSet<String> allProbeMap = new HashSet()
 
@@ -496,6 +507,9 @@ List makeGenotypeMaps(HashSet<String> lociSet, Set<String> geneSet,
 		}
     } // each locus probe
 
+    if(debugging <= 1) {
+        err.println "makeGenotypeMaps: return ${paProbeMap}, ${allProbeMap}"
+    }
     return [paProbeMap, allProbeMap]
 } // makeGenotypeMaps
 

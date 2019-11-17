@@ -8,7 +8,7 @@
  * The output will include the counts in a tab-delimited text file.
  * It is in the format '_hit.txt'.
  * 
- * e.g., filterMarkersKMC2.groovy -d /project/compbioRAID1/davidr/gonl/kmc/db/todo -p $HOME/doc/kir/snp/25mers_phv2 -o . -w .
+ * e.g., filterMarkersKMC2.groovy -d /project/compbioRAID1/davidr/gonl/kmc/db/todo -p $HOME/doc/kir/snp/markers_v1 -o . -w .
  * 
  * For now, place the work and output directories in a separate location from 
  * input.(?)
@@ -90,9 +90,10 @@ void filterKMC(String db, TreeSet dbSet, String id,
     dbname = db.replace(".kmc_pre", "")
     extension = ".txt"
     dbNoUnique = db.replace(".kmc_pre", "_hits")
+    dbNoUnique = dbNoUnique.replaceFirst(".*${fileSeparator}", "")
     resultDb = outDir + dbNoUnique
 	resultFile = outDir + dbNoUnique + extension
-	// e.g., kmc_tools simple -hptrue gonl-53a ~/doc/kir/snp/25mers_phv2 intersect gonl-53a_probes -ocleft
+	// e.g., kmc_tools simple gonl-53a ~/doc/kir/snp/25mers_phv2 intersect gonl-53a_probes -ocleft
     cmd = ["kmc_tools", "-hp", "simple", dbname, probeFile, "intersect", 
            resultDb, "-ocleft"]
     if(debugging <= 3) {
@@ -105,8 +106,8 @@ void filterKMC(String db, TreeSet dbSet, String id,
         err.println "filterKMC: returned ${retVal}"
     }
 
-	// e.g., kmc_tools dump -s gonl-53a_probes gonl-53a_hits.txt
-	cmd = ["kmc_tools", "dump", resultDb, resultFile]
+	// e.g., kmc_dump -s gonl-53a_probes gonl-53a_hits.txt
+	cmd = ["kmc_dump", resultDb, resultFile]
     if(debugging <= 3) {
         err.println cmd
     }
@@ -171,13 +172,16 @@ TreeSet<String> makeInFileSet(String inDir, String fileSeparator) {
 	if(f.isDirectory()) { 
 		fp = ~/(.*).kmc_pre/
 		f.eachFileMatch(fp) { f2 ->
-			err.println "f2=$f2"//todo
-			name = inDir + fileSeparator + f2
+            name = f2.toString()
+			//name = inDir + fileSeparator + name
 			name = name.replaceFirst("././", "")
 			ret.add(name)
 		}
 	} else {
-		name = inDir + fileSeparator + f
+        name = inDir
+        if(!name.startsWith(fileSeparator)) { 
+		    name = inDir + fileSeparator + f
+        }
 		ret.add(name)
 	}
 	return ret

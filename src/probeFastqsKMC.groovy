@@ -39,12 +39,18 @@ if(debugging <= 4) {
 }    
 
 // make list of fastq files for every individual
-String id = null
-if(options.d) {
-	id = options.d
+// d and f options go together
+String id = options.d
+err.println id
+path = options.p
+mpath = options.m
+if(id == false) {
+    mpath = ""
+} else {
+    path = ""
+err.println "path=" + path//todo
 }
-HashMap<String,ArrayList<String>> fqMap = loadFqMap(id,
-													options.p)
+HashMap<String,ArrayList<String>> fqMap = loadFqMap(id, path, mpath)
 if(debugging <= 2) {
     err.println "${fqMap.keySet().size()} IDs in the fastq map"
     firstKey = fqMap.keySet().iterator().next()
@@ -64,22 +70,23 @@ err.println "done"
  * if it is null, use all the files in the directory (fpath);
  * the id is take from the file or the directory
  */
-HashMap<String,ArrayList<String>> loadFqMap(String id,
-											String fpath) { 
+HashMap<String,ArrayList<String>> loadFqMap(String inid,
+											String fpath, String mapFile) { 
 	// return value
     HashMap<String,ArrayList<String>> fqMap = new HashMap()
 
-	String fqMapFileName = null
-	if(fqMapFileName == null) {
+	if((fpath != null) && (fpath != "")) {
 		new File(fpath).eachFileRecurse(FileType.FILES)  { inFile ->
 			if(inFile.name.endsWith(".fq") || inFile.name.endsWith(".fq.gz") ||
 			   inFile.name.endsWith(".fastq") || inFile.name.endsWith(".fastq.gz") ||
 			   inFile.name.endsWith(".fa") || inFile.name.endsWith(".fa.gz") ||
 			   inFile.name.endsWith(".fasta") || inFile.name.endsWith(".fasta.gz")) {
-				if(id == null) {
+				if(inid == null) {
 					// get the id from the directory name
 					id = fpath.split(System.getProperty('file.separator'))[-1]
-				}
+				} else {
+                                   id = inid
+                                }
 				//fileName = fpath + fileSeparator + inFile
 				fileName = inFile
 				idList = fqMap[id]
@@ -93,26 +100,29 @@ HashMap<String,ArrayList<String>> loadFqMap(String id,
 			} // if the correct file type
 		}
 	} else {
-		f = new File(fqMapFileName)
+		f = new File(mapFile)
 		FileReader probeReader = new FileReader(f)
 		probeReader.eachLine { line ->
 			if(debugging <= 1) {
-				err.println line
+				//err.println line
 			}
 			(id, shortFileName) = line.split('\t')
-			fileName = fpath + fileSeparator + shortFileName
+//old			fileName = fpath + fileSeparator + shortFileName
 			idList = fqMap[id]
 			if(idList != null) { 
-				idList.add(fileName)
+//old				idList.add(fileName)
+				idList.add(shortFileName)
 			} else { 
 				ArrayList<String> l = new ArrayList()
-				l.add(fileName)
+//old				l.add(fileName)
+				l.add(shortFileName)
 				fqMap[id] = l
 			}    
 		} // each line of file
 		
 		probeReader.close()
 	}
+    err.println fqMap.keySet()//todo
     return fqMap
 } // loadFqMap
 
@@ -182,9 +192,9 @@ OptionAccessor handleArgs(String[] args) {
     cli.m(longOpt:'fastq name map or directory name (one ID only)', args:1,
 		  argName:'map', 'fastq map', required: false)
     cli.d(longOpt:'ID for output', args:1,
-		  argName:'id', 'id', required: true)
+		  argName:'id', 'id', required: false)
     cli.p(longOpt:'path to the sequences files', args:1,
-		  argName:'path', 'fastq path', required: true)
+		  argName:'path', 'fastq path', required: false)
     cli.o(longOpt:'directory to put the output', args:1, argName:'out', 
 		  'output directory', required: true)
     cli.w(longOpt:'work directory', args:1, argName:'work', 
