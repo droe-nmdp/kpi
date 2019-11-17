@@ -17,12 +17,14 @@ nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
 params.input = '/opt/kpi/output/'
+//params.input = '/Users/daver/gonl/results_v6/hits_test/'
 bin1Suffix = 'bin1'
 params.output = '/opt/kpi/output/'
-//probeFile = '/opt/kpi/input/geneHapSigMarkers_v1.fasta'
-probeFile = '$HOME/git/kpi/input/geneHapSigMarkers_v1.fasta'
+//params.output = '/Users/daver/gonl/results_v6/hits_test/'
+probeFile = '/opt/kpi/input/geneHapSigMarkers_v2.fasta'
+//probeFile = '/Users/daver/git/kpi/input/markers_v2.fasta'
 //haps = '/opt/kpi/input/HapSet18_v2.txt'
-haps = '$HOME/git/kpi/input/HapSet18_v2.txt'
+haps = '/Users/daver/git/kpi/input/all_haps_v5.txt'
 
 // things that probably won't change per run
 kmcDir = params.input
@@ -48,7 +50,7 @@ kmcs2 = Channel.fromPath(kmcPath).ifEmpty { error "cannot find any ${kmcNameSuff
  * Output files have an extension of 'bin1'.
  */
 process kmc2locusBin {
-  publishDir resultDir, mode: 'copy', overwrite: true
+//  publishDir resultDir, mode: 'copy', overwrite: true
   maxForks nfForks
 
   input:
@@ -118,7 +120,7 @@ process locusBin2ExtendedLocusBin {
             fi
         fi
     done
-    pa2Haps3.groovy -h ${haps} -q "\$fileList" -o "\$outFile"
+    pa2Haps4.groovy -a1 -h ${haps} -q "\$fileList" -o "\$outFile"
     """
 } // locusBin2ExtendedLocusBin
 
