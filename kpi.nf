@@ -25,10 +25,12 @@ params.output = '/opt/kpi/output/'
 probeFile = '/opt/kpi/input/markers_v2.fasta'
 haps = '/opt/kpi/input/all_haps_v5.txt'
 //haps = '/Users/daver/git/kpi/input/all_haps_v5.txt'
+params.allOut = "0"
 
 // things that probably won't change per run
 kmcDir = params.input
 resultDir = params.output
+allOut = params.allOut
 if(!kmcDir.trim().endsWith("/")) {
 	kmcDir += "/"
 }
@@ -120,7 +122,7 @@ process locusBin2ExtendedLocusBin {
             fi
         fi
     done
-    pa2Haps4.groovy -a1 -h ${haps} -q "\$fileList" -o "\$outFile"
+    pa2Haps4.groovy -a ${allOut} -h ${haps} -q "\$fileList" -o "\$outFile"
     """
 } // locusBin2ExtendedLocusBin
 
