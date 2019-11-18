@@ -767,7 +767,7 @@ OptionAccessor handleArgs(String[] args) {
     cli.h(longOpt:'haps', args:1, argName:'file', 'file with haplotype definitions',
       required: true)
     cli.a(longOpt:'all', args:1, argName:'boolean', 'all output if set (debugging)',
-      required: true)
+      required: false)
     cli.q(longOpt:'qout', args:1, argName:'file', 'file with results of probe queries',
       required: true)
     cli.o(longOpt:'output', args:1, argName:'file', 'output file containing haplotype pair predictions',
