@@ -16,7 +16,7 @@
 nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
-params.input = '/opt/kpi/output/'
+params.input = '/opt/kpi/raw/'
 //params.input = '/Users/daver/gonl/results_v6/hits_test/'
 bin1Suffix = 'bin1'
 params.output = '/opt/kpi/output/'
