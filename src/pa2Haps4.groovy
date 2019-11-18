@@ -117,8 +117,17 @@ def void writeOutput(OptionAccessor options, Map genPAMap,
     TreeSet<String> intergeneHitSet = new TreeSet()
 /*    outWriter.println "genes and haplotypes: " + geneHitSet.sort().join("+")
 */
+	
+    // assume cA01~tA01 is homozygous
+    if((interpHapSet.size() == 1) &&
+       (interpHapSet.iterator()[0] == "1")) { // make homozygous
+        val = interpHapSet.iterator()[0]
+        val += "+${val}"
+        interpHapSet = new HashSet(1)
+        interpHapSet.add(val)
+    }
 
-	// reduce the gene-only haplotype-pair ambiguity by
+    // reduce the gene-only haplotype-pair ambiguity by
 	// ranking by the number of haplotype hits that are found
 	// in the haplotype-pair and keeping the best
     HashSet<String> pacombinedSet = paReduceByHap(genHitSet,
@@ -132,16 +141,6 @@ def void writeOutput(OptionAccessor options, Map genPAMap,
 		err.println "gene-reduced hap interp from ${interpPASet.size()} to ${hapcombinedSet.size()}"
 	}
 //	outWriter.println "haplotype reduced: ${pacombinedSet.size()}"
-	
-    // assume cA01~tA01 is homozygous
-    if((interpHapSet.size() == 1) &&
-       (interpHapSet.iterator()[0] == "1")) { // make homozygous
-        val = interpHapSet.iterator()[0]
-        val += "+${val}"
-        interpHapSet = new HashSet(1)
-        interpHapSet.add(val)
-    }
-
 
 	// get the best call for the combined prediction
 	// best to worst: gene+hap, inter-gene reduced, gene only, hap only
@@ -172,12 +171,13 @@ def void writeOutput(OptionAccessor options, Map genPAMap,
         err.println "least ambig: " + leastAmbigSet.sort().join('|')
     }
     if((options.a != null) && (options.a != "0") && (options.a != "F")) { 
-        outWriter.println "${pacombinedSet.size()} combined predictions"
+        outWriter.println "${pacombinedSet.size()} pa combined predictions"
 	    outWriter.println "genotype: " + genHitSet.sort().join("+")
         outWriter.println "gene: ${interpPASet.sort().join('|')}"
         outWriter.println "haplotype: ${interpHapSet.sort().join('|')}"
         outWriter.println "pa combined: ${pacombinedSet.sort().sort().join('|')}"
         outWriter.println "hap combined: ${hapcombinedSet.sort().sort().join('|')}"
+        outWriter.println "all\t${id}\t${genHitSet.sort().join("+")}\t${interpPASet.sort().join('|')}\t${interpHapSet.sort().join('|')}\t${pacombinedSet.sort().sort().join('|')}\t${hapcombinedSet.sort().sort().join('|')}"
     }
     outWriter.println "${leastAmbigSet.sort().sort().join('|')}"
 	outWriter.close()
