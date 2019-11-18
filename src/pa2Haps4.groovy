@@ -118,9 +118,9 @@ def void writeOutput(OptionAccessor options, Map genPAMap,
 /*    outWriter.println "genes and haplotypes: " + geneHitSet.sort().join("+")
 */
 	
-    // assume cA01~tA01 is homozygous
-    if((interpHapSet.size() == 1) &&
-       (interpHapSet.iterator()[0] == "1")) { // make homozygous
+    // assume homozygous if only one hap call
+    // (interpHapSet.iterator()[0] == "1")
+    if((interpHapSet.size() == 1) { // make homozygous
         val = interpHapSet.iterator()[0]
         val += "+${val}"
         interpHapSet = new HashSet(1)
