@@ -120,7 +120,7 @@ def void writeOutput(OptionAccessor options, Map genPAMap,
 	
     // assume homozygous if only one hap call
     // (interpHapSet.iterator()[0] == "1")
-    if((interpHapSet.size() == 1) { // make homozygous
+    if(interpHapSet.size() == 1) { // make homozygous
         val = interpHapSet.iterator()[0]
         val += "+${val}"
         interpHapSet = new HashSet(1)
