@@ -21,10 +21,10 @@ params.input = '/opt/kpi/raw/'
 bin1Suffix = 'bin1'
 params.output = '/opt/kpi/output/'
 //params.output = '/Users/daver/gonl/results_v6/hits_test/'
-probeFile = '/opt/kpi/input/geneHapSigMarkers_v2.fasta'
-//probeFile = '/Users/daver/git/kpi/input/markers_v2.fasta'
-//haps = '/opt/kpi/input/HapSet18_v2.txt'
-haps = '/Users/daver/git/kpi/input/all_haps_v5.txt'
+//probeFile = '/opt/kpi/input/geneHapSigMarkers_v2.fasta'
+probeFile = '/opt/kpi/input/markers_v2.fasta'
+haps = '/opt/kpi/input/all_haps_v5.txt'
+//haps = '/Users/daver/git/kpi/input/all_haps_v5.txt'
 
 // things that probably won't change per run
 kmcDir = params.input
