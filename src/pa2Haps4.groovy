@@ -171,7 +171,7 @@ def void writeOutput(OptionAccessor options, Map genPAMap,
         err.println "hap combined: " + hapcombinedSet.sort().join('|')
         err.println "least ambig: " + leastAmbigSet.sort().join('|')
     }
-    if(options.a != null) { 
+    if((options.a != null) && (options.a != "0") && (options.a != "F")) { 
         outWriter.println "${pacombinedSet.size()} combined predictions"
 	    outWriter.println "genotype: " + genHitSet.sort().join("+")
         outWriter.println "gene: ${interpPASet.sort().join('|')}"
