@@ -93,8 +93,8 @@ interpPAMap = interpret(paHapPairTable, genPAMap, false)
 //// now narrow the results by the absent-only loci
 interpAbsMap = interpret(absHapPairTable, genPAMap, true)
 nonHapPredictionSet = interpPAMap.keySet().intersect(interpAbsMap.keySet()) // ~
-err.println "abs" + interpAbsMap.keySet() //droe
 if(debugging <= 3) { 
+    err.println "abs" + interpAbsMap.keySet()
     err.println "first ${interpPAMap.keySet().size()} PA marker interpretation(s) " +
         interpPAMap.keySet().join('|')
     err.println "narrowed by absent-only markers:  ${nonHapPredictionSet.size()} PA marker interpretation(s) " +
@@ -199,8 +199,8 @@ def void writeOutput(OptionAccessor options, Map genPAMap,
         err.println "gene: " + interpPASet.sort().join('|')
         err.println "haplotype: " + interpHapSet.sort().join('|')
         err.println "pa combined: " + pacombinedSet.sort().join('|')
+        err.println options.a
     }
-    err.println options.a//todo
     //if((options.a != null) && (options.a != "0") && (options.a != false)) { 
         //outWriter.println "${pacombinedSet.size()} pa combined predictions"
 	    outWriter.println "genotype(orig): " + genHitSet.sort().join("+")
