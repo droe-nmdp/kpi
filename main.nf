@@ -28,13 +28,13 @@ nfKMCForks = 1 // run this many input text files in parallel
 params.input = '/opt/kpi/raw/'
 params.output = '/opt/kpi/output'
 params.id = 'defaultID'
-geneProbes  = '/opt/kpi/input/markers_v2.fasta'
+geneProbes  = '/opt/kpi/input/markers_v3.fasta'
 nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
 bin1Suffix = 'bin1'
-probeFile = '/opt/git/kpi/input/markers_v2.fasta'
-params.haps = '/opt/git/kpi/input/all_haps_v5.txt'
+probeFile = '/opt/git/kpi/input/markers_v3.fasta'
+params.haps = '/opt/git/kpi/input/all_haps_v6.txt'
 
 mapDir = params.input
 resultDir = params.output

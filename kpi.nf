@@ -17,14 +17,10 @@ nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
 params.input = '/opt/kpi/raw/'
-//params.input = '/Users/daver/gonl/results_v6/hits_test/'
 bin1Suffix = 'bin1'
 params.output = '/opt/kpi/output/'
-//params.output = '/Users/daver/gonl/results_v6/hits_test/'
-//probeFile = '/opt/kpi/input/geneHapSigMarkers_v2.fasta'
-probeFile = '/opt/kpi/input/markers_v2.fasta'
-haps = '/opt/kpi/input/all_haps_v5.txt'
-//haps = '/Users/daver/git/kpi/input/all_haps_v5.txt'
+probeFile = '/opt/kpi/input/markers_v3.fasta'
+haps = '/opt/kpi/input/all_haps_v6.txt'
 params.allOut = "0"
 
 // things that probably won't change per run
