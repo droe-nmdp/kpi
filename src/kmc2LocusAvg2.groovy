@@ -4,6 +4,7 @@
  * kmc2LocusAvg2
  *
  * Convert a kmc output file to probe hits per gene -- via average.
+ * Only the refence markers are considered from the genotype markers.
  *
  * input: tsv of probe sequence to count
  * output: fasta file per gene containing sequences that hit (e.g. '2DL4.bin1')
@@ -121,17 +122,20 @@ int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir,
 			if(prcCount == null) {
 				prcCount = 0
 			}
-			if((pcount == 0) && (prcCount == 0)) {
+			if((pcount == 0) && (prcCount == 0) &&
+               locusSet.contains(probe)) {
 				plist.add(0)
 				zeroCount++
             } else if((pcount >= maxHitCount) ||
-                      (prcCount >= maxHitCount)) { // off-kir
+                      (prcCount >= maxHitCount) ||
+                      !locusSet.contains(probe)) { // off-kir
                 if(debugging <= 2) { 
                     err.println "kmc2Fasta: off-kir for $loc probe $probe"
                 }
                 // remove from locusProbeHitMap
                 locusProbeHitMap.remove(probe)
                 // remove from locusHitListMap later
+                plist.removeAll(maxHitCount) // remove all the off-kir hits
 			} else {
 				// output the lcous and sequences that count
 				//todo: add debugging or whatever
@@ -163,8 +167,6 @@ int kmc2Fasta(String probeHitsFile, String probeFileName, String outputDir,
 			}
 			return
 		}
-
-        plist.removeAll(maxHitCount) // remove all the off-kir hits
 
 		if(debugging <= 2) {
 			err.println "kmc2Fasta: $loc plist=" + plist
@@ -261,7 +263,7 @@ def kmc2FastaLine(FileReader kmcReader, HashMap<String, TreeSet<String>> locusPr
 			if(debugging <= 2) { 
 				err.println "kmc2FastaLine: $locus $probe"
 			}
-			count = 10
+			count = 10 // default to 10x for fasta input genotypes
 		} else {
 			// kmc text format
 			(probe, countStr) = line.split('\t')
@@ -272,6 +274,8 @@ def kmc2FastaLine(FileReader kmcReader, HashMap<String, TreeSet<String>> locusPr
 		}
 		// here is where the kmc output is standardized to the
 		// complementarity in the probe input file
+        // this also subtracts the input reference probes (locusProbeMap)
+        // from the genotyped probes (locusProbeHitMap and locusHitListMap)
 		probeRc = reverseComplement(probe)
 		locusSet = locusProbeMap[probe]
 		if(locusSet == null) {		
