@@ -28,27 +28,34 @@ nfKMCForks = 1 // run this many input text files in parallel
 params.input = '/opt/kpi/raw/'
 params.output = '/opt/kpi/output'
 params.id = 'defaultID'
-geneProbes  = '/opt/kpi/input/markers_v3.fasta'
+geneProbes  = '/opt/kpi/input/markers_v3'
 nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
 bin1Suffix = 'bin1'
 probeFile = '/opt/git/kpi/input/markers_v3.fasta'
 params.haps = '/opt/git/kpi/input/all_haps_v6.txt'
+params.p = null
+params.m = null
 
-mapDir = params.input
+// things that probably won't change per run
 resultDir = params.output
 haps = params.haps
-// things that probably won't change per run
-mapDir = params.input
-resultDir = params.output
-if(!mapDir.trim().endsWith("/")) {
-	mapDir += "/"
-}
 if(!resultDir.trim().endsWith("/")) {
 	resultDir += "/"
 }
-
+probeCmd = ""
+mapDir = ""
+if(params.p != null) {
+    probeCmd = "probeFastqsKMC.groovy -d ${params.id} -p ${params.p} -o . -w ."
+    mapDir - params.p
+} else if(params.m != null) {
+    probeCmd = "probeFastqsKMC.groovy -m ${params.m} -o . -w ."
+    mapDir - params.m
+}
+if(!mapDir.trim().endsWith("/")) {
+	mapDir += "/"
+}
 fqsIn = Channel.fromPath(mapDir).ifEmpty { error "cannot find anything in $mapDir" }
 
 /* 
@@ -57,24 +64,20 @@ fqsIn = Channel.fromPath(mapDir).ifEmpty { error "cannot find anything in $mapDi
  */ 
 process probeFastqs {
 	//container = "droeatnmdp/kpi:latest"
-	publishDir resultDir, mode: 'copy', overwrite: true
+	//publishDir resultDir, mode: 'copy', overwrite: true
     maxForks 1
-//todo	scratch true
 	
 	input: file(f) from fqsIn
 	output:
-		file('*.kmc_*') into kmcdb
+    	file('*.kmc_*') into kmcdb
 	script:
 		"""
-        probeFastqsKMC.groovy -m ${f} -o . -w .
+        ${probeCmd}
 		"""
-//        probeFastqsKMC.groovy -d ${params.id} -p ${f} -o . -w .
-		
 } // probeFastqs
 
 process probeDB {
-	publishDir resultDir, mode: 'copy', overwrite: true
-//todo	scratch true
+	//publishDir resultDir, mode: 'copy', overwrite: true
 
 	input: file(kmc) from kmcdb
 	output:
@@ -82,7 +85,6 @@ process probeDB {
 	
 	script:
 		"""
-        echo ${kmc}
         filterMarkersKMC2.groovy -d . -p ${geneProbes} -o . -w .
 		"""
 		
@@ -102,10 +104,9 @@ process probeDB {
 process db2Locus {
   //publishDir resultDir, mode: 'copy', overwrite: true
   maxForks nfForks
-//todo  scratch true
 
   input:
-    file(hits) from filterdb
+    file(hits) from filterdb.flatMap()
   output:
 	file{"*.bin1"} into bin1Fastqs
 	val(id) into idc
@@ -139,7 +140,6 @@ fi
  */
 process hapInterp {
   publishDir resultDir, mode: 'copy', overwrite: true
-//  scratch true
 
   input:
 	file(b1List) from bin1Fastqs
@@ -175,7 +175,7 @@ process hapInterp {
     done
     outFile=${idIn}
     outFile+="_prediction.txt"
-    pa2Haps4.groovy -h ${haps} -q "\$fileList" -o "\$outFile"
+    pa2Haps.groovy -h ${haps} -q "\$fileList" -o "\$outFile"
     """
 } // hapInterp
 
