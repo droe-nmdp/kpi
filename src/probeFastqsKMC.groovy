@@ -25,7 +25,7 @@ import groovy.util.CliBuilder.*
 import groovy.util.OptionAccessor
 
 // things that may change per run
-debugging = 3 // TRACE=1, DEBUG=2, INFO=3
+debugging = 1 // TRACE=1, DEBUG=2, INFO=3
 kmerSize = "25"
 minKmers = "3" // reads hit less than this will be ignored
 
@@ -41,14 +41,12 @@ if(debugging <= 4) {
 // make list of fastq files for every individual
 // d and f options go together
 String id = options.d
-err.println id
-path = options.p
-mpath = options.m
-if(id == false) {
+String path = options.p
+String mpath = options.m
+if((path != null) && (path != "") && (path != "false")) {
     mpath = ""
 } else {
     path = ""
-err.println "path=" + path//todo
 }
 HashMap<String,ArrayList<String>> fqMap = loadFqMap(id, path, mpath)
 if(debugging <= 2) {
@@ -66,7 +64,7 @@ err.println "done"
  *
  * @param fqMapFileName file containing a tab-delimited mapping between ids and fastq files
  *
- * if fqMapFileName is not null, append the file name to the path and use it;
+ * if fpath is not null, append the file name to the path and use it;
  * if it is null, use all the files in the directory (fpath);
  * the id is take from the file or the directory
  */
@@ -122,7 +120,7 @@ HashMap<String,ArrayList<String>> loadFqMap(String inid,
 		
 		probeReader.close()
 	}
-    err.println fqMap.keySet()//todo
+
     return fqMap
 } // loadFqMap
 
