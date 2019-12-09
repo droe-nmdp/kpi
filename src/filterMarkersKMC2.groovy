@@ -50,7 +50,7 @@ if(!outDir.endsWith(fileSeparator)) {
 TreeSet<String> dbSet = new TreeSet()
 // loop through the fasta files
 inFileSet.each { f ->
-    err.println f.toString() //todo
+    //err.println f.toString() //todo
     // e.g., 2DS5-2DS1_unique.kmc_pre
     //(shortName, ext) = f.toString().split('\\.?') //todo:document and/or make better
 	shortName = f.toString()[0..f.lastIndexOf('\\.')]
@@ -118,9 +118,10 @@ void filterKMC(String db, TreeSet dbSet, String id,
         err.println "filterKMC: returned ${retVal}"
     }
 
+    // todo: i don't think this is working
 	rmFile1 = outDir + "${dbNoUnique}.kmc_pre"
 	rmFile2 = outDir + "${dbNoUnique}.kmc_suf"
-	cmd = ["rm", "-f", rmFile1, rmFile2]
+	cmd = ["rm", "-f", "`readlink ${rmFile1}`", "`readlink ${rmFile2}`"]
     if(debugging <= 3) {
         err.println cmd
     }
