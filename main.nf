@@ -33,8 +33,8 @@ nfForks = 4 // run this many input text files in parallel
 // input: kmc probe txt files
 kmcNameSuffix = '_hits.txt'          // extension on the file name
 bin1Suffix = 'bin1'
-probeFile = '/opt/git/kpi/input/markers_v3.fasta'
-params.haps = '/opt/git/kpi/input/all_haps_v6.txt'
+probeFile = '/opt/kpi/input/markers_v3.fasta'
+params.haps = '/opt/kpi/input/all_haps_v6.txt'
 params.p = null
 params.m = null
 workflow.onComplete { file('work').deleteDir() }
