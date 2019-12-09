@@ -29,7 +29,7 @@ import groovy.util.CliBuilder.*
 import groovy.util.OptionAccessor
 
 // things that may change per run
-debugging = 3 // TRACE=1, DEBUG=2, INFO=3
+debugging = 1 // TRACE=1, DEBUG=2, INFO=3
 
 // things that probably won't change per run
 err = System.err
@@ -118,20 +118,27 @@ void filterKMC(String db, TreeSet dbSet, String id,
         err.println "filterKMC: returned ${retVal}"
     }
 
-    // todo: i don't think this is working
-	rmFile1 = outDir + "${dbNoUnique}.kmc_pre"
-	rmFile2 = outDir + "${dbNoUnique}.kmc_suf"
-	cmd = ["rm", "-f", "`readlink ${rmFile1}`", "`readlink ${rmFile2}`"]
-    if(debugging <= 3) {
-        err.println cmd
+    // todo: not working
+    pwd = System.getProperty("user.dir");
+	rmFile1 = pwd + "/${dbname}.kmc_pre"
+	rmFile2 = pwd + "/${dbname}.kmc_suf"
+    try { 
+        rmFile1 = Files.readSymbolicLink(rmFile1)
+        rmFile2 = Files.readSymbolicLink(rmFile2)
+	    cmd = ["rm", "-f", rmFile1.toString(), rmFile2.toString()]
+        if(debugging <= 3) {
+            err.println cmd
+        }
+        ret = cmd.execute()
+        ret.waitFor()
+        retVal = ret.exitValue()
+        if(debugging <= 2) {
+            err.println "filterKMC: returned ${retVal}"
+        }
+    } catch(NotLinkException) {
+        err.println "not sym link"
     }
-    ret = cmd.execute()
-    ret.waitFor()
-    retVal = ret.exitValue()
-    if(debugging <= 2) {
-        err.println "filterKMC: returned ${retVal}"
-    }
-
+    err.println "droe2"//todo
     if(debugging <= 1) {
         err.println "filterKMC: return"
     }
