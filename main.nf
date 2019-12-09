@@ -37,6 +37,8 @@ probeFile = '/opt/git/kpi/input/markers_v3.fasta'
 params.haps = '/opt/git/kpi/input/all_haps_v6.txt'
 params.p = null
 params.m = null
+process.cleanup = true
+workflow.onComplete { file('work').deleteDir() }
 
 // things that probably won't change per run
 resultDir = params.output
@@ -77,7 +79,8 @@ process probeFastqs {
 } // probeFastqs
 
 process probeDB {
-	//publishDir resultDir, mode: 'copy', overwrite: true
+    process.cleanup = true
+    //publishDir resultDir, mode: 'copy', overwrite: true
 
 	input: file(kmc) from kmcdb
 	output:
