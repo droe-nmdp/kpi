@@ -24,7 +24,7 @@
  *   Apache Commons Math
  *
  * @author Dave Roe
- *
+ * @todo this is very slow
  */
 
 import groovy.io.*
@@ -34,7 +34,7 @@ import groovy.util.OptionAccessor
 import org.apache.commons.math3.stat.StatUtils
 
 // things that may change per run
-debugging = 2 // TRACE=1, DEBUG=2, INFO=3
+debugging = 3 // TRACE=1, DEBUG=2, INFO=3
 // ignore kmers with a count < this (currently not using)
 //minKmers = 2 //todo (coded, but commented out)
 kmcFasta = false   // kmc output format is fasta or text (false)
